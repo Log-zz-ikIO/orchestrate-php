@@ -182,7 +182,7 @@ abstract class AbstractConnection implements ConnectionInterface
 
         // sanitize uri
         if (is_array($uri)) {
-            $uri = implode('/', array_map('urlencode', $uri));
+            $uri = implode('/', array_map('rawurlencode', $uri)); // RFC 3986
         }
 
         // request
