@@ -1,7 +1,7 @@
 <?php
 namespace andrefelipe\Orchestrate\Query;
 
-use andrefelipe\Orchestrate\Common\ToArrayInterface;
+use andrefelipe\Orchestrate\Contracts\ToArrayInterface;
 
 /**
  *

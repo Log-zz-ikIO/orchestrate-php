@@ -35,6 +35,8 @@ Requirements:
 > We still are at 0.x version, there is a [lot of ideas](https://github.com/andrefelipe/orchestrate-php/blob/master/TODO.md) to look at.
 
 
+##### This README file reflects the current dev-master version.
+
 
 ## Instalation
 
@@ -109,7 +111,7 @@ if ($item->isSuccess()) {
 ##### Actual Orchestrate objects (Collection, KeyValue, Event, etc), which provide an object API as well as the response status.
 
 ```php
-use andrefelipe\Orchestrate\Objects\Application;
+use andrefelipe\Orchestrate\Application;
 
 // provide the parameters, in order: apiKey, host, version
 $application = new Application(
@@ -384,7 +386,7 @@ For example, let's start with a very simple KeyValue, made to reflect a 'Member'
 // Member.php
 namespace MyProject\Models;
 
-use andrefelipe\Orchestrate\Objects\KeyValue;
+use andrefelipe\Orchestrate\KeyValue;
 
 class Member extends KeyValue
 {
@@ -407,7 +409,7 @@ Getter/setters are fine too! You could use it you favor to add validation, error
 // Member.php
 namespace MyProject\Models;
 
-use andrefelipe\Orchestrate\Objects\KeyValue;
+use andrefelipe\Orchestrate\KeyValue;
 
 class Member extends KeyValue
 {
@@ -477,7 +479,7 @@ In that case you will also want to create a class to act as your Collection:
 // Members.php
 namespace MyProject\Models;
 
-use andrefelipe\Orchestrate\Objects\Collection;
+use andrefelipe\Orchestrate\Collection;
 use GuzzleHttp\ClientInterface;
 
 class Members extends Collection
@@ -524,8 +526,8 @@ $client->setItemClass($class);
 $client->setEventClass($class);
 
 // where $class is a fully qualified name of a class that implements, at minimum:
-// andrefelipe\Orchestrate\Objects\KeyValueInterface for KeyValue
-// andrefelipe\Orchestrate\Objects\EventInterface for Event
+// andrefelipe\Orchestrate\Contracts\KeyValueInterface for KeyValue
+// andrefelipe\Orchestrate\Contracts\EventInterface for Event
 ```
 
 For a pratical example, please view [this project](https://github.com/andrefelipe/orchestrate-phalcon).
@@ -1471,5 +1473,5 @@ Here are some useful notes to consider when using the Orchestrate service:
 
 ## Postscript
 
-This client is actively maintained. I am using to develop the next version of [typo/graphic posters](https://www.typographicposters.com) and more projects at work.
+This client is actively maintained. I am using in production at [www.anzuclub.com](https://www.anzuclub.com) and developing the next version of [typo/graphic posters](https://www.typographicposters.com) plus a few smaller apps.
 

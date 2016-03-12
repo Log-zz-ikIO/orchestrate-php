@@ -1,8 +1,8 @@
 <?php
 namespace andrefelipe\Orchestrate\Query;
 
-use andrefelipe\Orchestrate\Common\ToArrayInterface;
-use andrefelipe\Orchestrate\Objects\EventInterface;
+use andrefelipe\Orchestrate\Contracts\ToArrayInterface;
+use andrefelipe\Orchestrate\Contracts\EventInterface;
 
 /**
  *
@@ -190,7 +190,7 @@ class TimeRangeBuilder implements ToArrayInterface
      */
     private function toEventTime($value)
     {
-        if ($value instanceof DateTime) {
+        if ($value instanceof \DateTime) {
             $seconds = $value->getTimestamp();
 
         } elseif (is_numeric($value)) {

@@ -1,14 +1,6 @@
 <?php
 namespace andrefelipe\Orchestrate;
 
-use andrefelipe\Orchestrate\Objects\Application;
-use andrefelipe\Orchestrate\Objects\Collection;
-use andrefelipe\Orchestrate\Objects\Event;
-use andrefelipe\Orchestrate\Objects\Events;
-use andrefelipe\Orchestrate\Objects\KeyValue;
-use andrefelipe\Orchestrate\Objects\Refs;
-use andrefelipe\Orchestrate\Objects\Relationship;
-use andrefelipe\Orchestrate\Objects\Relationships;
 use andrefelipe\Orchestrate\Query\KeyRangeBuilder;
 use andrefelipe\Orchestrate\Query\PatchBuilder;
 use andrefelipe\Orchestrate\Query\TimeRangeBuilder;

@@ -1,8 +1,8 @@
 <?php
 namespace andrefelipe\Orchestrate\Query;
 
-use andrefelipe\Orchestrate\Common\ToArrayInterface;
-use andrefelipe\Orchestrate\Objects\KeyValueInterface;
+use andrefelipe\Orchestrate\Contracts\ToArrayInterface;
+use andrefelipe\Orchestrate\Contracts\KeyValueInterface;
 
 /**
  *

@@ -2,8 +2,9 @@
 
 ## HEAD
 - Working on Async. Only implemented on KeyValue to test out.
-- Fix url encode on requests, for cases an item key has slashes or other special chars.
-- Removed convertion to ObjectArray of getValue and extract (JMESPath) methods, to ease compatibility with larger projects.
+- Fixed URL encode on requests, for cases an item key has slashes or other special chars.
+- BC: Moved object classes to the upper level, please use andrefelipe\Orchestrate\KeyValue instead of use andrefelipe\Orchestrate\Objects\KeyValue.
+- Deprecated the ObjectArray class and its implementation on getValue and extract (JMESPath) methods to ease compatibility with larger projects.
 
 ## 0.16.1 - 2016-01-05
 - BC: Split methods for If-Match/If-None-Match conditionals for a much more comprehensive usage:
