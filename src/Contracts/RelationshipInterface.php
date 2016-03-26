@@ -105,43 +105,15 @@ interface RelationshipInterface extends ItemInterface
 
     /**
      * Sets the relation between the two objects, in both ways.
-     * Two API calls will be made in sequence, if the first one succedes then
-     * the second one is made.
+     * Two API calls are made concurrently.
      *
      * @param array $value
      * @param string $ref
      *
-     * @return boolean Success of operation, if both calls were successful.
+     * @return boolean Success of operation.
      * @link https://orchestrate.io/docs/apiref#graph-put
      */
     public function putBoth(array $value = null);
-
-    /**
-     * Sets the relation between the two objects, in both ways.
-     * Two API calls will be made in sequence, if the first one succedes then
-     * the second one is made.
-     * Uses the If-Match check, please read doc of 'putIf' method.
-     *
-     * @param string $ref
-     * @param array $value
-     *
-     * @return boolean Success of operation, if both calls were successful.
-     * @link https://orchestrate.io/docs/apiref#graph-put-conditional
-     */
-    public function putBothIf($ref = true, array $value = null);
-
-    /**
-     * Sets the relation between the two objects, in both ways.
-     * Two API calls will be made in sequence, if the first one succedes then
-     * the second one is made.
-     * Uses the If-None-Match check, please read doc of 'putIfNone' method.
-     *
-     * @param array $value
-     *
-     * @return boolean Success of operation, if both calls were successful.
-     * @link https://orchestrate.io/docs/apiref#graph-put-conditional
-     */
-    public function putBothIfNone(array $value = null);
 
     /**
      * Remove the relation between the two objects. This is an one-way
@@ -155,10 +127,9 @@ interface RelationshipInterface extends ItemInterface
 
     /**
      * Remove the relation between the two objects, in both ways.
-     * Two API calls will be made in sequence, if the first one succedes then
-     * the second one is made.
+     * Two API calls are made concurrently.
      *
-     * @return boolean Success of operation, if both calls were successful.
+     * @return boolean Success of operation.
      * @link https://orchestrate.io/docs/apiref#graph-delete
      */
     public function deleteBoth();
