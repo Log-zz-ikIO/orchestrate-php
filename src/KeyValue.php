@@ -281,9 +281,19 @@ class KeyValue extends AbstractItem implements KeyValueInterface
         return $this->_patchMerge($value, $reload);
     }
 
+    public function patchMergeAsync(array $value, $reload = false)
+    {
+        return $this->_patchMergeAsync($value, $reload);
+    }
+
     public function patchMergeIf($ref, array $value, $reload = false)
     {
         return $this->_patchMerge($value, $this->getValidRef($ref), $reload);
+    }
+
+    public function patchMergeIfAsync($ref, array $value, $reload = false)
+    {
+        return $this->_patchMergeAsync($value, $this->getValidRef($ref), $reload);
     }
 
     private function _patchMerge(array $value, $ref = null, $reload = false)

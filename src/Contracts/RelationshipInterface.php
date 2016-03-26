@@ -1,6 +1,8 @@
 <?php
 namespace andrefelipe\Orchestrate\Contracts;
 
+use GuzzleHttp\Promise\PromiseInterface;
+
 /**
  * Define the Relationship minimum required interface.
  */
@@ -64,6 +66,14 @@ interface RelationshipInterface extends ItemInterface
     public function get();
 
     /**
+     * Get the current relation value.
+     *
+     * @return PromiseInterface
+     * @link https://orchestrate.io/docs/apiref#graph-get
+     */
+    public function getAsync();
+
+    /**
      * Sets the relation between the two objects. This is an one-way
      * operation, only the relation from the source will be set,
      * to go both ways use the 'putBoth' method.
@@ -74,6 +84,18 @@ interface RelationshipInterface extends ItemInterface
      * @link https://orchestrate.io/docs/apiref#graph-put
      */
     public function put(array $value = null);
+
+    /**
+     * Sets the relation between the two objects. This is an one-way
+     * operation, only the relation from the source will be set,
+     * to go both ways use the 'putBoth' method.
+     *
+     * @param array $value
+     *
+     * @return PromiseInterface
+     * @link https://orchestrate.io/docs/apiref#graph-put
+     */
+    public function putAsync(array $value = null);
 
     /**
      * Sets the relation between the two objects if the current relationship on
@@ -90,6 +112,20 @@ interface RelationshipInterface extends ItemInterface
     public function putIf($ref = true, array $value = null);
 
     /**
+     * Sets the relation between the two objects if the current relationship on
+     * Orchestrate matches this specific ref. This is an one-way
+     * operation, only the relation from the source will be set,
+     * to go both ways use the 'putBothIf' method.
+     *
+     * @param string $ref
+     * @param array $value
+     *
+     * @return PromiseInterface
+     * @link https://orchestrate.io/docs/apiref#graph-put-conditional
+     */
+    public function putIfAsync($ref = true, array $value = null);
+
+    /**
      * Sets the relation between the two objects if there is no relationship
      * set yet. Mind that the check if the relation exist is made on this
      * current (source) object only. This is an one-way operation, only the
@@ -104,6 +140,20 @@ interface RelationshipInterface extends ItemInterface
     public function putIfNone(array $value = null);
 
     /**
+     * Sets the relation between the two objects if there is no relationship
+     * set yet. Mind that the check if the relation exist is made on this
+     * current (source) object only. This is an one-way operation, only the
+     * relation from the source will be set, to go both ways use the
+     * 'putBothIfNone' method.
+     *
+     * @param array $value
+     *
+     * @return PromiseInterface
+     * @link https://orchestrate.io/docs/apiref#graph-put-conditional
+     */
+    public function putIfNoneAsync(array $value = null);
+
+    /**
      * Sets the relation between the two objects, in both ways.
      * Two API calls are made concurrently.
      *
@@ -116,6 +166,18 @@ interface RelationshipInterface extends ItemInterface
     public function putBoth(array $value = null);
 
     /**
+     * Sets the relation between the two objects, in both ways.
+     * Two API calls are made concurrently.
+     *
+     * @param array $value
+     * @param string $ref
+     *
+     * @return PromiseInterface
+     * @link https://orchestrate.io/docs/apiref#graph-put
+     */
+    public function putBothAsync(array $value = null);
+
+    /**
      * Remove the relation between the two objects. This is an one-way
      * operation, only the relation from the source will be removed,
      * to go both ways use the 'deleteBoth' method.
@@ -126,6 +188,16 @@ interface RelationshipInterface extends ItemInterface
     public function delete();
 
     /**
+     * Remove the relation between the two objects. This is an one-way
+     * operation, only the relation from the source will be removed,
+     * to go both ways use the 'deleteBoth' method.
+     *
+     * @return PromiseInterface
+     * @link https://orchestrate.io/docs/apiref#graph-delete
+     */
+    public function deleteAsync();
+
+    /**
      * Remove the relation between the two objects, in both ways.
      * Two API calls are made concurrently.
      *
@@ -133,5 +205,14 @@ interface RelationshipInterface extends ItemInterface
      * @link https://orchestrate.io/docs/apiref#graph-delete
      */
     public function deleteBoth();
+
+    /**
+     * Remove the relation between the two objects, in both ways.
+     * Two API calls are made concurrently.
+     *
+     * @return PromiseInterface
+     * @link https://orchestrate.io/docs/apiref#graph-delete
+     */
+    public function deleteBothAsync();
 
 }

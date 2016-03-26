@@ -1,6 +1,8 @@
 <?php
 namespace andrefelipe\Orchestrate\Contracts;
 
+use GuzzleHttp\Promise\PromiseInterface;
+
 /**
  * Define the Event minimum required interface.
  */
@@ -91,6 +93,12 @@ interface EventInterface extends ItemInterface
     public function get();
 
     /**
+     * @return PromiseInterface
+     * @link https://orchestrate.io/docs/apiref#events-get
+     */
+    public function getAsync();
+
+    /**
      * @param array $value
      * @param string $ref
      *
@@ -98,6 +106,15 @@ interface EventInterface extends ItemInterface
      * @link https://orchestrate.io/docs/apiref#events-put
      */
     public function put(array $value = null);
+
+    /**
+     * @param array $value
+     * @param string $ref
+     *
+     * @return PromiseInterface
+     * @link https://orchestrate.io/docs/apiref#events-put
+     */
+    public function putAsync(array $value = null);
 
     /**
      * @param string $ref
@@ -109,6 +126,15 @@ interface EventInterface extends ItemInterface
     public function putIf($ref = true, array $value = null);
 
     /**
+     * @param string $ref
+     * @param array $value
+     *
+     * @return PromiseInterface
+     * @link https://orchestrate.io/docs/apiref#events-put-conditional
+     */
+    public function putIfAsync($ref = true, array $value = null);
+
+    /**
      * @param array $value
      * @param int $timestamp
      *
@@ -118,11 +144,27 @@ interface EventInterface extends ItemInterface
     public function post(array $value = null, $timestamp = null);
 
     /**
+     * @param array $value
+     * @param int $timestamp
+     *
+     * @return PromiseInterface
+     * @link https://orchestrate.io/docs/apiref#events-post
+     */
+    public function postAsync(array $value = null, $timestamp = null);
+
+    /**
      *
      * @return boolean Success of operation.
      * @link https://orchestrate.io/docs/apiref#events-delete
      */
     public function delete();
+
+    /**
+     *
+     * @return PromiseInterface
+     * @link https://orchestrate.io/docs/apiref#events-delete
+     */
+    public function deleteAsync();
 
     /**
      * @param string $ref
@@ -131,4 +173,12 @@ interface EventInterface extends ItemInterface
      * @link https://orchestrate.io/docs/apiref#events-delete-conditional
      */
     public function deleteIf($ref = true);
+
+    /**
+     * @param string $ref
+     *
+     * @return PromiseInterface
+     * @link https://orchestrate.io/docs/apiref#events-delete-conditional
+     */
+    public function deleteIfAsync($ref = true);
 }
