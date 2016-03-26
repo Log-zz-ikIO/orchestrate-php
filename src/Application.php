@@ -1,7 +1,6 @@
 <?php
 namespace andrefelipe\Orchestrate;
 
-use andrefelipe\Orchestrate as Orchestrate;
 use andrefelipe\Orchestrate\Contracts\ApplicationInterface;
 
 /**
@@ -22,7 +21,7 @@ class Application extends AbstractSearchList implements ApplicationInterface
     {
         // lazily instantiante
         if ($apiKey || $host || $version) {
-            $client = Orchestrate\default_http_client($apiKey, $host, $version);
+            $client = default_http_client($apiKey, $host, $version);
             $this->setHttpClient($client);
         }
     }

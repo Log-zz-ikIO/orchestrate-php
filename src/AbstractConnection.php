@@ -1,7 +1,6 @@
 <?php
 namespace andrefelipe\Orchestrate;
 
-use andrefelipe\Orchestrate as Orchestrate;
 use andrefelipe\Orchestrate\Contracts\ConnectionInterface;
 use andrefelipe\Orchestrate\Exception\RejectedPromiseException;
 use GuzzleHttp\ClientInterface;
@@ -49,7 +48,7 @@ abstract class AbstractConnection implements ConnectionInterface
     public function getHttpClient()
     {
         if (!$this->_httpClient) {
-            $this->_httpClient = Orchestrate\default_http_client();
+            $this->_httpClient = default_http_client();
         }
         return $this->_httpClient;
     }

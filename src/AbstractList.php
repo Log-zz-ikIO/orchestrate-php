@@ -1,7 +1,6 @@
 <?php
 namespace andrefelipe\Orchestrate;
 
-use andrefelipe\Orchestrate as Orchestrate;
 use andrefelipe\Orchestrate\Contracts\ItemInterface;
 use andrefelipe\Orchestrate\Contracts\ListInterface;
 use GuzzleHttp\ClientInterface;
@@ -140,7 +139,7 @@ abstract class AbstractList extends AbstractConnection implements ListInterface
         $data = [
             'kind' => 'list',
             'count' => count($this),
-            'results' => $this->getResults(),
+            'results' => to_array($this->getResults()),
         ];
 
         if ($this->_totalCount !== null) {
@@ -187,7 +186,7 @@ abstract class AbstractList extends AbstractConnection implements ListInterface
 
     public function mergeResults(ListInterface $list)
     {
-        Orchestrate\merge_object($list->getResults(), $this->_results);
+        merge_object($list->getResults(), $this->_results);
         return $this;
     }
 

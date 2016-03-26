@@ -1,7 +1,6 @@
 <?php
 namespace andrefelipe\Orchestrate;
 
-use andrefelipe\Orchestrate as Orchestrate;
 use andrefelipe\Orchestrate\Contracts\ItemInterface;
 use JmesPath\Env as JmesPath;
 
@@ -165,7 +164,7 @@ abstract class AbstractItem extends AbstractConnection implements ItemInterface
                 'ref' => $this->_ref,
                 'reftime' => $this->_reftime,
             ],
-            'value' => array_merge($this->getMappedValues(true), Orchestrate\object_to_array($this)),
+            'value' => array_merge($this->getMappedValues(true), object_to_array($this)),
         ];
 
         // search properties
@@ -193,7 +192,7 @@ abstract class AbstractItem extends AbstractConnection implements ItemInterface
     {
         $this->settlePromise();
 
-        return array_merge($this->getMappedValues(), Orchestrate\object_to_array($this));
+        return array_merge($this->getMappedValues(), object_to_array($this));
     }
 
     public function setValue(array $values)
@@ -212,7 +211,7 @@ abstract class AbstractItem extends AbstractConnection implements ItemInterface
     {
         $this->settlePromise();
 
-        Orchestrate\merge_object($item->getValue(), $this);
+        merge_object($item->getValue(), $this);
         return $this;
     }
 
@@ -220,7 +219,7 @@ abstract class AbstractItem extends AbstractConnection implements ItemInterface
     {
         $this->settlePromise();
 
-        foreach (Orchestrate\get_public_properties($this) as $key) {
+        foreach (get_public_properties($this) as $key) {
             $this->{$key} = null;
         }
         foreach ($this->_propertyMap as $key => $methods) {
