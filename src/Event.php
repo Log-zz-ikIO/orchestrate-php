@@ -89,6 +89,13 @@ class Event extends AbstractItem implements EventInterface
 
     public function get()
     {
+        $this->getAsync($ref);
+        $this->settlePromise();
+        return $this->isSuccess();
+    }
+
+    public function getAsync()
+    {
         // define request options
         $path = [
             $this->getCollection(true),
@@ -100,13 +107,17 @@ class Event extends AbstractItem implements EventInterface
         ];
 
         // request
-        $this->request('GET', $path);
+        $promise = $this->requestAsync('GET', $path);
 
-        // set values
-        if ($this->isSuccess()) {
-            $this->init($this->getBody());
-        }
-        return $this->isSuccess();
+        // chain promise
+        $this->_promise = $promise->then(
+            static function ($self) {
+                $self->init($self->getBodyArray());
+                return $self;
+            }
+        );
+
+        return $this->_promise;
     }
 
     public function put(array $value = null)
@@ -114,12 +125,29 @@ class Event extends AbstractItem implements EventInterface
         return $this->_put($value);
     }
 
+    public function putAsync(array $value = null)
+    {
+        return $this->_putAsync($value);
+    }
+
     public function putIf($ref = true, array $value = null)
     {
         return $this->_put($value, $this->getValidRef($ref));
     }
 
+    public function putIfAsync($ref = true, array $value = null)
+    {
+        return $this->_putAsync($value, $this->getValidRef($ref));
+    }
+
     private function _put(array $value = null, $ref = null)
+    {
+        $this->_putAsync($value, $ref);
+        $this->settlePromise();
+        return $this->isSuccess();
+    }
+
+    private function _putAsync(array $value = null, $ref = null)
     {
         $newValue = $value === null ? $this->getValue() : $value;
 
@@ -140,24 +168,36 @@ class Event extends AbstractItem implements EventInterface
         }
 
         // request
-        $this->request('PUT', $path, $options);
+        $promise = $this->requestAsync('PUT', $path, $options);
 
-        // set values
-        if ($this->isSuccess()) {
-            $this->_reftime = null;
-            $this->_ordinalStr = null;
-            $this->setRefFromETag();
-            $this->setTimestampAndOrdinalFromLocation();
+        // chain promise
+        $this->_promise = $promise->then(
+            static function ($self) use ($value) {
 
-            if ($value !== null) {
-                $this->resetValue();
-                $this->setValue($newValue);
+                $self->_reftime = null;
+                $self->_ordinalStr = null;
+                $self->setRefFromETag();
+                $self->setTimestampAndOrdinalFromLocation();
+
+                if ($value !== null) {
+                    $self->resetValue();
+                    $self->setValue($value);
+                }
+                return $self;
             }
-        }
-        return $this->isSuccess();
+        );
+
+        return $this->_promise;
     }
 
     public function post(array $value = null, $timestamp = null)
+    {
+        $this->postAsync($value);
+        $this->settlePromise();
+        return $this->isSuccess();
+    }
+
+    public function postAsync(array $value = null, $timestamp = null)
     {
         $path = [
             $this->getCollection(true),
@@ -176,21 +216,25 @@ class Event extends AbstractItem implements EventInterface
         $newValue = $value === null ? $this->getValue() : $value;
 
         // request
-        $this->request('POST', $path, ['json' => $newValue]);
+        $promise = $this->requestAsync('POST', $path, ['json' => $newValue]);
 
-        // set values
-        if ($this->isSuccess()) {
-            $this->_reftime = null;
-            $this->_ordinalStr = null;
-            $this->setRefFromETag();
-            $this->setTimestampAndOrdinalFromLocation();
+        $this->_promise = $promise->then(
+            static function ($self) use ($value) {
 
-            if ($value !== null) {
-                $this->resetValue();
-                $this->setValue($newValue);
+                $self->_reftime = null;
+                $self->_ordinalStr = null;
+                $self->setRefFromETag();
+                $self->setTimestampAndOrdinalFromLocation();
+
+                if ($value !== null) {
+                    $self->resetValue();
+                    $self->setValue($value);
+                }
+                return $self;
             }
-        }
-        return $this->isSuccess();
+        );
+
+        return $this->_promise;
     }
 
     public function delete()
@@ -204,6 +248,13 @@ class Event extends AbstractItem implements EventInterface
     }
 
     private function _delete($ref = null)
+    {
+        $this->_deleteAsync($ref);
+        $this->settlePromise();
+        return $this->isSuccess();
+    }
+
+    private function _deleteAsync($ref = null)
     {
         // define request options
         $path = [
@@ -222,18 +273,23 @@ class Event extends AbstractItem implements EventInterface
         }
 
         // request
-        $this->request('DELETE', $path, $options);
+        $promise = $this->requestAsync('DELETE', $path, $options);
 
-        // update values
-        if ($this->isSuccess()) {
-            $this->_ref = null;
-            $this->_reftime = null;
-            $this->_ordinalStr = null;
-            $this->_score = null;
-            $this->_distance = null;
-            $this->resetValue();
-        }
-        return $this->isSuccess();
+        $this->_promise = $promise->then(
+            static function ($self) {
+
+                $self->_ref = null;
+                $self->_reftime = null;
+                $self->_ordinalStr = null;
+                $self->_score = null;
+                $self->_distance = null;
+                $self->resetValue();
+
+                return $self;
+            }
+        );
+
+        return $this->_promise;
     }
 
     private function setTimestampAndOrdinalFromLocation()

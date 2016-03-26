@@ -1,7 +1,7 @@
 # CHANGELOG
 
 ## HEAD
-- Working on Async. Only implemented on KeyValue to test out.
+- Working on Async.
 - Introduced the getException method on all objets, to read the last operation exception, in case of errors.
 - Our library will not throws errors anymore, please use getException as well as isError, etc, to check for errors. The only case where an error may, optionally, be thrown is with asyc promises's unwrap.
 - Fixed URL encode on requests, for cases an item key has slashes or other special chars.
