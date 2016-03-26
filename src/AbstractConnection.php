@@ -3,15 +3,16 @@ namespace andrefelipe\Orchestrate;
 
 use andrefelipe\Orchestrate as Orchestrate;
 use andrefelipe\Orchestrate\Contracts\ConnectionInterface;
+use andrefelipe\Orchestrate\Exception\RejectedPromiseException;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\RejectedPromise;
-use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\ResponseInterface;
 
 /**
- * Provides the bare basis, a connection to a HTTP client.
+ * Provides client capabilities to an object. It connects to a HTTP client,
+ * makes requests, and stores the response and exception, if any.
  */
 abstract class AbstractConnection implements ConnectionInterface
 {
@@ -23,12 +24,12 @@ abstract class AbstractConnection implements ConnectionInterface
     /**
      * @var array
      */
-    private $_body = null;
+    private $_bodyArray = [];
 
     /**
      * @var PromiseInterface
      */
-    private $_promise = null;
+    protected $_promise = null;
 
     /**
      * @var ResponseInterface
@@ -38,7 +39,12 @@ abstract class AbstractConnection implements ConnectionInterface
     /**
      * @var string
      */
-    private $_status = null;
+    private $_reasonPhrase = '';
+
+    /**
+     * @var \Exception
+     */
+    private $_exception = null;
 
     public function getHttpClient()
     {
@@ -54,43 +60,35 @@ abstract class AbstractConnection implements ConnectionInterface
         return $this;
     }
 
-    public function getBody()
+    protected function settlePromise()
     {
-        $this->wait();
+        if ($this->_promise) {
+            $this->_promise->wait(false);
+            $this->_promise = null;
+        }
+    }
 
-        return $this->_body;
+    public function reset()
+    {
+        $this->settlePromise();
+
+        $this->_response = null;
+        $this->_bodyArray = [];
+        $this->_reasonPhrase = '';
     }
 
     public function getResponse()
     {
-        $this->wait();
+        $this->settlePromise();
 
         return $this->_response;
     }
 
-    public function getStatus()
-    {
-        $this->wait();
-
-        return $this->_status;
-    }
-
     public function getStatusCode()
     {
-        $this->wait();
+        $this->settlePromise();
 
         return $this->_response ? $this->_response->getStatusCode() : 0;
-    }
-
-    public function getOrchestrateRequestId()
-    {
-        $this->wait();
-
-        if ($this->_response) {
-            $value = $this->_response->getHeader('X-ORCHESTRATE-REQ-ID');
-            return empty($value) ? null : $value[0];
-        }
-        return null;
     }
 
     public function isSuccess()
@@ -100,35 +98,40 @@ abstract class AbstractConnection implements ConnectionInterface
 
     public function isError()
     {
-        $this->wait();
-
         $code = $this->getStatusCode();
         return !$code || ($code >= 400 && $code <= 599);
     }
 
-    public function reset()
+    public function getReasonPhrase()
     {
-        $this->wait();
+        $this->settlePromise();
 
-        $this->_response = null;
-        $this->_body = null;
-        $this->_status = null;
+        return $this->_reasonPhrase;
     }
 
-    public function wait()
+    public function getException()
     {
-        if ($this->_promise) {
-            try {
-                $this->_promise->wait();
+        $this->settlePromise();
 
-            } catch (\GuzzleHttp\Exception\ConnectException $e) {
-                $this->_response = null;
-                $this->_body = null;
-                $this->_status = $e->getMessage();
-            }
+        return $this->_exception;
+    }
 
-            $this->_promise = null;
+    public function getOrchestrateRequestId()
+    {
+        $this->settlePromise();
+
+        if ($this->_response) {
+            $value = $this->_response->getHeader('X-ORCHESTRATE-REQ-ID');
+            return isset($value[0]) ? $value[0] : '';
         }
+        return '';
+    }
+
+    public function getBodyArray()
+    {
+        $this->settlePromise();
+
+        return $this->_bodyArray;
     }
 
     /**
@@ -141,19 +144,18 @@ abstract class AbstractConnection implements ConnectionInterface
      * @param string|array $uri     URI
      * @param array        $options Request options to apply.
      *
-     * @return ResponseInterface
-     * @throws GuzzleException
+     * @return self
      */
     protected function request($method, $uri = null, array $options = [])
     {
-        $options[RequestOptions::SYNCHRONOUS] = true;
         $this->requestAsync($method, $uri, $options);
-        return $this->getResponse();
-    }
+        $this->settlePromise();
+        return $this;
+    } // TODO remover se nao usar
 
     /**
      * Request asynchronously using the current HTTP client, preparing the
-     * success and exception callbacks.
+     * success and exception callbacks to transfer results in.
      *
      * More information on the options please go to the Guzzle docs.
      *
@@ -166,42 +168,40 @@ abstract class AbstractConnection implements ConnectionInterface
     protected function requestAsync($method, $uri = null, array $options = [])
     {
         // wait for any other async requests to finish
-        $this->wait();
+        $this->settlePromise();
+
+        // reset local vars
+        $this->_response = null;
+        $this->_bodyArray = [];
+        $this->_reasonPhrase = '';
+
+        // store in var as we use static functions on the callbacks
+        $self = $this;
+
+        // sanitize uri parts
+        if (is_array($uri)) {
+            $uri = implode('/', array_map('rawurlencode', $uri)); // RFC 3986
+        }
 
         // safely build query
         if (isset($options['query']) && is_array($options['query'])) {
             $options['query'] = http_build_query($options['query'], null, '&', PHP_QUERY_RFC3986);
         }
 
-        // reset local vars
-        $this->_response = null;
-        $this->_body = null;
-        $this->_status = null;
-
-        // store in var as we use static functions on the callbacks
-        $self = $this;
-
-        // sanitize uri
-        if (is_array($uri)) {
-            $uri = implode('/', array_map('rawurlencode', $uri)); // RFC 3986
-        }
+        // enforce http exceptions
+        $options['http_errors'] = true;
 
         // request
-        $this->_promise = $this->getHttpClient()->requestAsync($method, $uri, $options);
+        $promise = $this->getHttpClient()->requestAsync($method, $uri, $options);
 
-        $promise = $this->_promise->then(
+        $this->_promise = $promise->then(
             static function (ResponseInterface $response) use ($self) {
 
                 // clear out
                 $self->_promise = null;
 
                 // set response
-                $self->setResponse($response);
-
-                // the response is sucessfull, but is it a successful error?
-                if ($self->isError()) {
-                    return new RejectedPromise($self);
-                }
+                $self->transferResponseData($response);
 
                 return $self;
             },
@@ -210,37 +210,43 @@ abstract class AbstractConnection implements ConnectionInterface
                 // clear out
                 $self->_promise = null;
 
-                $response = $e->getResponse();
-                if ($response) {
+                // set values
+                $self->_exception = $e;
+
+                if ($e->hasResponse()) {
                     // set response, if there is one
-                    $self->setResponse($response);
+                    $self->transferResponseData($e->getResponse());
                 } else {
-                    // set error message if none
-                    $self->_status = $e->getMessage();
+                    // set just the error message
+                    $self->_reasonPhrase = $e->getMessage();
                 }
 
-                return new RejectedPromise($self);
+                return new RejectedPromise(
+                    new RejectedPromiseException($self->getReasonPhrase(), $self)
+                );
             }
         );
 
-        return $promise;
+        return $this->_promise;
     }
 
-    protected function setResponse(ResponseInterface $response)
+    private function transferResponseData(ResponseInterface $response)
     {
         // set response
         $this->_response = $response;
 
         // set body
-        $this->_body = json_decode($this->_response->getBody(), true);
+        $this->_bodyArray = json_decode($response->getBody(), true) ?: [];
+
+        // TODO usar o Guzzle json error, e guardar o exception tambem...
 
         // set status message
-        if ($this->isError() && !empty($this->_body['message'])) {
+        if ($this->isError() && !empty($this->_bodyArray['message'])) {
             // honor the Orchestrate error messages
-            $this->_status = $this->_body['message'];
+            $this->_reasonPhrase = $this->_bodyArray['message'];
         } else {
             // continue with HTTP Reason-Phrase
-            $this->_status = $this->_response->getReasonPhrase();
+            $this->_reasonPhrase = $response->getReasonPhrase();
         }
     }
 }

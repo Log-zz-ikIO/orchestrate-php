@@ -271,22 +271,23 @@ abstract class AbstractList extends AbstractConnection implements ListInterface
         $this->_prevUrl = '';
 
         // set properties
-        if ($body = $this->getBody()) {
-            if (!empty($body['results'])) {
-                $this->_results = array_map(
-                    [$this, 'createInstance'],
-                    $body['results']
-                );
-            }
-            if (isset($body['total_count'])) {
-                $this->_totalCount = (int) $body['total_count'];
-            }
-            if (!empty($body['next'])) {
-                $this->_nextUrl = $body['next'];
-            }
-            if (!empty($body['prev'])) {
-                $this->_prevUrl = $body['prev'];
-            }
+        $body = $this->getBodyArray();
+        
+        if (!empty($body['results'])) {
+            $this->_results = array_map(
+                [$this, 'createInstance'],
+                $body['results']
+            );
         }
+        if (isset($body['total_count'])) {
+            $this->_totalCount = (int) $body['total_count'];
+        }
+        if (!empty($body['next'])) {
+            $this->_nextUrl = $body['next'];
+        }
+        if (!empty($body['prev'])) {
+            $this->_prevUrl = $body['prev'];
+        }
+    
     }
 }

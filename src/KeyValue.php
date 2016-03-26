@@ -80,7 +80,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
     public function get($ref = null)
     {
         $this->getAsync($ref);
-        $this->wait();
+        $this->settlePromise();
         return $this->isSuccess();
     }
 
@@ -99,20 +99,16 @@ class KeyValue extends AbstractItem implements KeyValueInterface
         // request
         $promise = $this->requestAsync('GET', $path);
 
-        $promise = $promise->then(
+        $this->_promise = $promise->then(
             static function ($self) {
-                $self->setValue($self->getBody());
+
+                $self->setValue($self->getBodyArray());
                 $self->setRefFromETag();
                 return $self;
             }
-            // ,
-            // static function ($self) {
-            //     return new \GuzzleHttp\Promise\RejectedPromise($self);
-            // }
-
         );
 
-        return $promise;
+        return $this->_promise;
     }
 
     public function put(array $value = null)
@@ -148,7 +144,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
     private function _put(array $value = null, $ref = null)
     {
         $this->_putAsync($value, $ref);
-        $this->wait();
+        $this->settlePromise();
         return $this->isSuccess();
     }
 
@@ -172,25 +168,26 @@ class KeyValue extends AbstractItem implements KeyValueInterface
         // request
         $promise = $this->requestAsync('PUT', $path, $options);
 
-        $promise = $promise->then(
-            static function ($self) use ($value, $newValue) {
+        // chain promise
+        $this->_promise = $promise->then(
+            static function ($self) use ($value) {
 
                 if ($value !== null) {
                     $self->resetValue();
-                    $self->setValue($newValue);
+                    $self->setValue($value);
                 }
                 $self->setRefFromETag();
                 return $self;
             }
         );
 
-        return $promise;
+        return $this->_promise;
     }
 
     public function post(array $value = null)
     {
         $this->postAsync($value);
-        $this->wait();
+        $this->settlePromise();
         return $this->isSuccess();
     }
 
@@ -202,7 +199,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
         $path = [$this->getCollection(true)];
         $promise = $this->requestAsync('POST', $path, ['json' => $newValue]);
 
-        $promise = $promise->then(
+        $this->_promise = $promise->then(
             static function ($self) use ($value, $newValue) {
 
                 if ($value !== null) {
@@ -214,7 +211,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
             }
         );
 
-        return $promise;
+        return $this->_promise;
     }
 
     public function patch(PatchBuilder $operations, $reload = false)
@@ -240,7 +237,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
     private function _patch(PatchBuilder $operations, $ref = null, $reload = false)
     {
         $this->_patchAsync($operations, $ref, $reload);
-        $this->wait();
+        $this->settlePromise();
         return $this->isSuccess();
     }
 
@@ -260,7 +257,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
         // request
         $promise = $this->requestAsync('PATCH', $path, $options);
 
-        $promise = $promise->then(
+        $this->_promise = $promise->then(
             static function ($self) use ($reload) {
 
                 $self->setRefFromETag();
@@ -274,7 +271,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
             }
         );
 
-        return $promise;
+        return $this->_promise;
     }
 
     public function patchMerge(array $value, $reload = false)
@@ -290,7 +287,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
     private function _patchMerge(array $value, $ref = null, $reload = false)
     {
         $this->_patchMergeAsync($value, $ref, $reload);
-        $this->wait();
+        $this->settlePromise();
         return $this->isSuccess();
     }
 
@@ -310,7 +307,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
         // request
         $promise = $this->requestAsync('PATCH', $path, $options);
 
-        $promise = $promise->then(
+        $this->_promise = $promise->then(
             static function ($self) use ($reload) {
 
                 $self->setRefFromETag();
@@ -324,7 +321,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
             }
         );
 
-        return $promise;
+        return $this->_promise;
     }
 
     public function delete()
@@ -340,7 +337,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
     private function _delete($ref = null)
     {
         $this->_deleteAsync($ref);
-        $this->wait();
+        $this->settlePromise();
         return $this->isSuccess();
     }
 
@@ -360,7 +357,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
         // request
         $promise = $this->requestAsync('DELETE', $path, $options);
 
-        $promise = $promise->then(
+        $this->_promise = $promise->then(
             static function ($self) {
 
                 $self->_score = null;
@@ -373,13 +370,13 @@ class KeyValue extends AbstractItem implements KeyValueInterface
             }
         );
 
-        return $promise;
+        return $this->_promise;
     }
 
     public function purge()
     {
         $this->purgeAsync();
-        $this->wait();
+        $this->settlePromise();
         return $this->isSuccess();
     }
 
@@ -395,7 +392,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
         // request
         $promise = $this->requestAsync('DELETE', $path, $options);
 
-        $promise = $promise->then(
+        $this->_promise = $promise->then(
             static function ($self) {
 
                 $this->_key = null;
@@ -410,7 +407,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
             }
         );
 
-        return $promise;
+        return $this->_promise;
     }
 
     public function refs()

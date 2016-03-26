@@ -46,7 +46,7 @@ abstract class AbstractSearchList extends AbstractList
         parent::setResponseValues();
 
         if ($this->isSuccess()) {
-            $body = $this->getBody();
+            $body = $this->getBodyArray();
             if (!empty($body['aggregates'])) {
                 $this->_aggregates = $body['aggregates'];
             } else {

@@ -5,6 +5,9 @@ use andrefelipe\Orchestrate as Orchestrate;
 use andrefelipe\Orchestrate\Contracts\ItemInterface;
 use JmesPath\Env as JmesPath;
 
+/**
+ * Implements the ItemInterface logic.
+ */
 abstract class AbstractItem extends AbstractConnection implements ItemInterface
 {
     use Properties\KindTrait;
@@ -25,7 +28,7 @@ abstract class AbstractItem extends AbstractConnection implements ItemInterface
      */
     public function __get($name)
     {
-        $this->wait();
+        $this->settlePromise();
 
         if (isset($this->_propertyMap[$name])) {
             if (isset($this->_propertyMap[$name][0])) {
@@ -43,7 +46,7 @@ abstract class AbstractItem extends AbstractConnection implements ItemInterface
      */
     public function __set($name, $value)
     {
-        $this->wait();
+        $this->settlePromise();
 
         if (isset($this->_propertyMap[$name])) {
             if (isset($this->_propertyMap[$name][1])) {
@@ -59,7 +62,7 @@ abstract class AbstractItem extends AbstractConnection implements ItemInterface
      */
     public function __unset($name)
     {
-        $this->wait();
+        $this->settlePromise();
 
         $this->{$name} = null;
     }
@@ -70,7 +73,7 @@ abstract class AbstractItem extends AbstractConnection implements ItemInterface
      */
     public function offsetGet($offset)
     {
-        $this->wait();
+        $this->settlePromise();
 
         return $this->{$offset};
     }
@@ -84,7 +87,7 @@ abstract class AbstractItem extends AbstractConnection implements ItemInterface
      */
     public function offsetSet($offset, $value)
     {
-        $this->wait();
+        $this->settlePromise();
 
         if (is_null($offset) || is_numeric($offset)) {
             throw new \RuntimeException('Indexed arrays not allowed at the root of '.get_class($this).' objects.');
@@ -98,7 +101,7 @@ abstract class AbstractItem extends AbstractConnection implements ItemInterface
      */
     public function offsetUnset($offset)
     {
-        $this->wait();
+        $this->settlePromise();
 
         $this->{$offset} = null;
     }
@@ -109,7 +112,7 @@ abstract class AbstractItem extends AbstractConnection implements ItemInterface
      */
     public function offsetExists($offset)
     {
-        $this->wait();
+        $this->settlePromise();
 
         return isset($this->{$offset});
     }
@@ -126,7 +129,7 @@ abstract class AbstractItem extends AbstractConnection implements ItemInterface
 
     public function init(array $data)
     {
-        $this->wait();
+        $this->settlePromise();
 
         if (!empty($data)) {
 
@@ -153,7 +156,7 @@ abstract class AbstractItem extends AbstractConnection implements ItemInterface
 
     public function toArray()
     {
-        $this->wait();
+        $this->settlePromise();
 
         $data = [
             'kind' => static::KIND,
@@ -188,14 +191,14 @@ abstract class AbstractItem extends AbstractConnection implements ItemInterface
 
     public function getValue()
     {
-        $this->wait();
+        $this->settlePromise();
 
         return array_merge($this->getMappedValues(), Orchestrate\object_to_array($this));
     }
 
     public function setValue(array $values)
     {
-        $this->wait();
+        $this->settlePromise();
 
         if (!empty($values)) {
             foreach ($values as $key => $value) {
@@ -207,7 +210,7 @@ abstract class AbstractItem extends AbstractConnection implements ItemInterface
 
     public function mergeValue(ItemInterface $item)
     {
-        $this->wait();
+        $this->settlePromise();
 
         Orchestrate\merge_object($item->getValue(), $this);
         return $this;
@@ -215,7 +218,7 @@ abstract class AbstractItem extends AbstractConnection implements ItemInterface
 
     public function resetValue()
     {
-        $this->wait();
+        $this->settlePromise();
 
         foreach (Orchestrate\get_public_properties($this) as $key) {
             $this->{$key} = null;
@@ -233,7 +236,7 @@ abstract class AbstractItem extends AbstractConnection implements ItemInterface
      */
     public function serialize()
     {
-        $this->wait();
+        $this->settlePromise();
 
         return serialize($this->toArray());
     }

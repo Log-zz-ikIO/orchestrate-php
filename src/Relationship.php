@@ -119,7 +119,7 @@ class Relationship extends AbstractItem implements RelationshipInterface
 
         // set values
         if ($this->isSuccess()) {
-            $this->setValue($this->getBody());
+            $this->setValue($this->getBodyArray());
             $this->setRefFromETag();
         }
         return $this->isSuccess();

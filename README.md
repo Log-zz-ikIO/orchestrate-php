@@ -4,7 +4,7 @@ Orchestrate.io PHP Client
 A very user-friendly PHP client for [Orchestrate.io](https://orchestrate.io) DBaaS.
 
 - Choose which approach you prefer, [client-like or object-like](#getting-started).
-- [Template engine friendly](#objectarray), with [JMESPath](#jmespath) support.
+- [Template engine friendly](#template-engine), with [JMESPath](#jmespath) support.
 - Create [Models](#models) by extending our classes, and easily change child classes.
 - [Serialization](#serialization) is supported.
 - [toArray/toJson](#data-access) methods produces the same output format as Orchestrate's export.
@@ -170,9 +170,9 @@ if ($item->get()) {
     // in case of error, like 404, it would return results like these:
 
     $response = $item->getResponse());
-    // - Psr\Http\Message\ResponseInterface
+    // Psr\Http\Message\ResponseInterface
 
-    echo $item->getStatus();
+    echo $item->getReasonPhrase();
     // The requested items could not be found.
     // — the Orchestrate Error Description
     
@@ -180,11 +180,14 @@ if ($item->get()) {
     // 404
     // — the HTTP response status code
 
+    echo $item->getException();
+    // GuzzleHttp\Exception\ClientException
+
     echo $item->getOrchestrateRequestId();
     // ec96acd0-ac7b-11e4-8cf6-22000a0d84a1
-    // - Orchestrate request id, X-ORCHESTRATE-REQ-ID
+    // - Orchestrate request id, X-ORCHESTRATE-REQ-ID header
 
-    print_r($item->getBody());
+    print_r($item->getBodyArray());
     // Array
     // (
     //     [message] => The requested items could not be found.
@@ -233,7 +236,7 @@ if ($item->get()) {
 
     if ($item->put())) {
         echo $item->getRef(); // cbb48f9464612f20 (the new ref)
-        echo $item->getStatus();  // ok
+        echo $item->getReasonPhrase();  // OK
         echo $item->getStatusCode();  // 200
     }
 
@@ -681,7 +684,7 @@ $item->getRef(); // string
 $item->getValue(); // Array of the Value
 $item->toArray(); // Array of the Orchestrate object (with path and value)
 $item->toJson(); // Json of the Orchestrate object
-$item->getBody(); // Array of the unfiltered HTTP response body
+$item->getBodyArray(); // Array of the unfiltered HTTP response body
 
 ```
 
@@ -1383,8 +1386,8 @@ if ($relation->put()) {
     // success
 
 } else {
-    // check error status message
-    echo $relation->getStatus();
+    // check http status message
+    echo $relation->getReasonPhrase();
 }
 
 // TIP: Relations are one way operations. We relate an item to another,

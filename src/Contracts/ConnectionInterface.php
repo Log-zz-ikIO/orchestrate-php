@@ -2,6 +2,7 @@
 namespace andrefelipe\Orchestrate\Contracts;
 
 use GuzzleHttp\ClientInterface;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Defines the object HTTP connection methods.
@@ -26,11 +27,9 @@ interface ConnectionInterface
     public function setHttpClient(ClientInterface $httpClient);
 
     /**
-     * Gets the body of the response as associative array.
-     *
-     * @return array|null Body decoded as associative array, or null if unknown.
+     * Resets current object for reuse.
      */
-    public function getBody();
+    public function reset();
 
     /**
      * Get the PSR-7 Response object of the last request.
@@ -40,29 +39,15 @@ interface ConnectionInterface
     public function getResponse();
 
     /**
-     * Gets the status of the last response.
-     * If the request was successful the value is the HTTP Reason-Phrase.
-     * If not, the value is the Orchestrate Error Description.
+     * Gets the status code of the last response.
      *
-     * @return string|null Reason phrase, or null if unknown.
-     * @link https://orchestrate.io/docs/apiref#errors
-     */
-    public function getStatus();
-
-    /**
-     * Gets the response status code.
+     * The status code is a 3-digit integer result code of the server's attempt
+     * to understand and satisfy the request.
      *
      * @return int Status code.
      * @link https://orchestrate.io/docs/apiref#errors
      */
     public function getStatusCode();
-
-    /**
-     * Gets the X-ORCHESTRATE-REQ-ID header.
-     *
-     * @return string|null
-     */
-    public function getOrchestrateRequestId();
 
     /**
      * Check if last request was successful.
@@ -83,7 +68,35 @@ interface ConnectionInterface
     public function isError();
 
     /**
-     * Resets current object for reuse.
+     * Gets the response reason phrase associated with the status code.
+     *
+     * If the request was successful the value is the HTTP Reason-Phrase.
+     * If not, the value is the Orchestrate Error Description.
+     *
+     * @return string Reason phrase, or empty string if unknown.
+     * @link https://orchestrate.io/docs/apiref#errors
      */
-    public function reset();
+    public function getReasonPhrase();
+
+    /**
+     * Gets the last exception, if any.
+     *
+     * @return \Exception|null
+     */
+    public function getException();
+
+    /**
+     * Gets the X-ORCHESTRATE-REQ-ID header of the last response.
+     *
+     * @return string
+     */
+    public function getOrchestrateRequestId();
+
+    /**
+     * Gets the body of the response as associative array.
+     *
+     * @return array Body decoded as associative array.
+     */
+    public function getBodyArray();
+
 }

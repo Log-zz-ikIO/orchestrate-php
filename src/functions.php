@@ -41,7 +41,6 @@ function default_http_config($apiKey = null, $host = null, $version = null)
             'Content-Type' => 'application/json',
         ],
         'auth' => [$apiKey ?: getenv('ORCHESTRATE_API_KEY'), null],
-        'http_errors' => false,
     ];
 }
 
