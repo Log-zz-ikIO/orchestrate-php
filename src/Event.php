@@ -112,6 +112,7 @@ class Event extends AbstractItem implements EventInterface
         // chain promise
         $this->_promise = $promise->then(
             static function ($self) {
+
                 $self->init($self->getBodyArray());
                 return $self;
             }
@@ -242,9 +243,19 @@ class Event extends AbstractItem implements EventInterface
         return $this->_delete();
     }
 
+    public function deleteAsync()
+    {
+        return $this->_deleteAsync();
+    }
+
     public function deleteIf($ref = true)
     {
         return $this->_delete($this->getValidRef($ref));
+    }
+
+    public function deleteIfAsync($ref = true)
+    {
+        return $this->_deleteAsync($this->getValidRef($ref));
     }
 
     private function _delete($ref = null)

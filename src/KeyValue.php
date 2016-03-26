@@ -99,6 +99,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
         // request
         $promise = $this->requestAsync('GET', $path);
 
+        // chain promise
         $this->_promise = $promise->then(
             static function ($self) {
 
@@ -195,16 +196,17 @@ class KeyValue extends AbstractItem implements KeyValueInterface
     {
         $newValue = $value === null ? $this->getValue() : $value;
 
-        // request
         $path = [$this->getCollection(true)];
+
+        // request
         $promise = $this->requestAsync('POST', $path, ['json' => $newValue]);
 
         $this->_promise = $promise->then(
-            static function ($self) use ($value, $newValue) {
+            static function ($self) use ($value) {
 
                 if ($value !== null) {
                     $self->resetValue();
-                    $self->setValue($newValue);
+                    $self->setValue($value);
                 }
                 $self->setKeyRefFromLocation();
                 return $self;
@@ -329,9 +331,19 @@ class KeyValue extends AbstractItem implements KeyValueInterface
         return $this->_delete();
     }
 
+    public function deleteAsync()
+    {
+        return $this->_deleteAsync();
+    }
+
     public function deleteIf($ref = true)
     {
         return $this->_delete($this->getValidRef($ref));
+    }
+
+    public function deleteIfAsync($ref = true)
+    {
+        return $this->_deleteAsync($this->getValidRef($ref));
     }
 
     private function _delete($ref = null)
