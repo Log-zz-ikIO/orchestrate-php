@@ -80,25 +80,33 @@ function merge_object($source, $target)
 /**
  * Gets an object public properties out, into an Array.
  * If any value is an object, and has a toArray method, it will be executed.
+ * Will skip null values.
  *
  * @param object $object
  * @return array
  */
 function object_to_array($object)
 {
+    return to_array(get_object_vars($object));
+}
+
+/**
+ * Return a new array, executing the toArray method of any object found.
+ * Will skip null values.
+ * 
+ * @param array $array
+ * @return array
+ */
+function to_array(array $array)
+{
     $result = [];
 
-    foreach (get_object_vars($object) as $key => $value) {
-
+    foreach ($array as $key => $value) {
         if ($value === null) {
             continue;
         }
-        if (is_object($value)) {
-            if (method_exists($value, 'toArray')) {
-                $result[$key] = $value->toArray();
-            } else {
-                $result[$key] = $value;
-            }
+        if (is_object($value) && method_exists($value, 'toArray')) {
+            $result[$key] = $value->toArray();
         } else {
             $result[$key] = $value;
         }
