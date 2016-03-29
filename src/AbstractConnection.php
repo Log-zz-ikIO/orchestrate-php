@@ -229,7 +229,7 @@ abstract class AbstractConnection implements ConnectionInterface
         return $this->_promise;
     }
 
-    private function transferResponseData(ResponseInterface $response)
+    protected function transferResponseData(ResponseInterface $response)
     {
         // set response
         $this->_response = $response;
