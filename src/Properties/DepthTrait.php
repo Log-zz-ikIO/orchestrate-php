@@ -1,6 +1,8 @@
 <?php
 namespace andrefelipe\Orchestrate\Properties;
 
+use andrefelipe\Orchestrate\Exception\MissingPropertyException;
+
 /**
  * Trait that implements the Relations' Depth methods.
  *
@@ -17,12 +19,12 @@ trait DepthTrait
      * @param boolean $required
      *
      * @return array
-     * @throws \BadMethodCallException if 'relation depth' is required but not set yet.
+     * @throws MissingPropertyException if 'relation depth' is required but not set yet.
      */
     public function getDepth($required = false)
     {
         if ($required && empty($this->_depth)) {
-            throw new \BadMethodCallException('There is no relation depth set yet. Do so through setDepth() method.');
+            throw new MissingPropertyException('relation depth', 'setDepth');
         }
 
         return $this->_depth;

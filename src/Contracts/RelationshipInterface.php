@@ -2,6 +2,7 @@
 namespace andrefelipe\Orchestrate\Contracts;
 
 use GuzzleHttp\Promise\PromiseInterface;
+use andrefelipe\Orchestrate\Exception\MissingPropertyException;
 
 /**
  * Define the Relationship minimum required interface.
@@ -28,7 +29,7 @@ interface RelationshipInterface extends ItemInterface
      * @param boolean $required
      *
      * @return KeyValueInterface
-     * @throws \BadMethodCallException if 'destination' is required but not set yet.
+     * @throws MissingPropertyException if 'destination' is required but not set yet.
      */
     public function getDestination($required = false);
 
@@ -45,7 +46,7 @@ interface RelationshipInterface extends ItemInterface
      * @param boolean $required
      *
      * @return string
-     * @throws \BadMethodCallException if 'relation' is required but not set yet.
+     * @throws MissingPropertyException if 'relation' is required but not set yet.
      */
     public function getRelation($required = false);
 

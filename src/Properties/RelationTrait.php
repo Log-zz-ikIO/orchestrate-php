@@ -1,6 +1,8 @@
 <?php
 namespace andrefelipe\Orchestrate\Properties;
 
+use andrefelipe\Orchestrate\Exception\MissingPropertyException;
+
 /**
  * Trait that implements the relation kind methods.
  *
@@ -19,12 +21,12 @@ trait RelationTrait
      * @param boolean $required
      *
      * @return string
-     * @throws \BadMethodCallException if 'relation' is required but not set yet.
+     * @throws MissingPropertyException if 'relation' is required but not set yet.
      */
     public function getRelation($required = false)
     {
         if ($required && !$this->_relation) {
-            throw new \BadMethodCallException('There is no relation set yet. Do so through setRelation() method.');
+            throw new MissingPropertyException('relation', 'setRelation');
         }
 
         return $this->_relation;
@@ -39,7 +41,7 @@ trait RelationTrait
     public function setRelation($kind)
     {
         if (is_array($kind)) {
-            throw new \InvalidArgumentException('The kind parameter can not be Array. Only one relation can be handled per time.');
+            throw new \InvalidArgumentException('The "kind" parameter can not be Array. Only one relation can be handled per time.');
         }
 
         $this->_relation = (string) $kind;

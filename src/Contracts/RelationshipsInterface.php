@@ -1,6 +1,8 @@
 <?php
 namespace andrefelipe\Orchestrate\Contracts;
 
+use andrefelipe\Orchestrate\Exception\MissingPropertyException;
+
 /**
  * Define the Relationship list minimum required interface.
  */
@@ -40,7 +42,7 @@ interface RelationshipsInterface extends ListInterface
      * @param boolean $required
      *
      * @return array
-     * @throws \BadMethodCallException if 'relation depth' is required but not set yet.
+     * @throws MissingPropertyException if 'relation depth' is required but not set yet.
      */
     public function getDepth($required = false);
 

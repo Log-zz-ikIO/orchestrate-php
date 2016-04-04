@@ -1,6 +1,8 @@
 <?php
 namespace andrefelipe\Orchestrate\Contracts;
 
+use andrefelipe\Orchestrate\Exception\MissingPropertyException;
+
 /**
  * Defines the basis for all the singular items (KeyValue, Event and Relationship):
  * - Value storage: They have a value body to store any ammount of properties.
@@ -12,7 +14,10 @@ namespace andrefelipe\Orchestrate\Contracts;
 interface ItemInterface extends ObjectInterface
 {
     /**
+     * @param boolean $required
+     *
      * @return string
+     * @throws MissingPropertyException if 'ref' is required but not set yet.
      */
     public function getRef($required = false);
 

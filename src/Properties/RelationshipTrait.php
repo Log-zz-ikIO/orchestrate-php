@@ -2,6 +2,7 @@
 namespace andrefelipe\Orchestrate\Properties;
 
 use andrefelipe\Orchestrate\Contracts\KeyValueInterface;
+use andrefelipe\Orchestrate\Exception\MissingPropertyException;
 
 /**
  * Trait that implements the Relation's source and destination methods.
@@ -24,11 +25,12 @@ trait RelationshipTrait
      * @param boolean $required
      *
      * @return KeyValueInterface
+     * @throws MissingPropertyException if 'source' is required but not set yet.
      */
     public function getSource($required = false)
     {
         if ($required && !$this->_source) {
-            throw new \BadMethodCallException('There is no source set yet. Do so through setSource() method.');
+            throw new MissingPropertyException('source', 'setSource');
         }
 
         return $this->_source;
@@ -50,12 +52,12 @@ trait RelationshipTrait
      * @param boolean $required
      *
      * @return KeyValueInterface
-     * @throws \BadMethodCallException if 'destination' is required but not set yet.
+     * @throws MissingPropertyException if 'destination' is required but not set yet.
      */
     public function getDestination($required = false)
     {
         if ($required && !$this->_destination) {
-            throw new \BadMethodCallException('There is no destination set yet. Do so through setDestination() method.');
+            throw new MissingPropertyException('destination', 'setDestination');
         }
 
         return $this->_destination;

@@ -2,6 +2,7 @@
 namespace andrefelipe\Orchestrate\Contracts;
 
 use GuzzleHttp\Promise\PromiseInterface;
+use andrefelipe\Orchestrate\Exception\MissingPropertyException;
 
 /**
  * Define the Event minimum required interface.
@@ -70,7 +71,7 @@ interface EventInterface extends ItemInterface
      * @param boolean $required
      *
      * @return int
-     * @throws \BadMethodCallException if 'ordinal' is required but not set yet.
+     * @throws MissingPropertyException if 'ordinal' is required but not set yet.
      */
     public function getOrdinal($required = false);
 

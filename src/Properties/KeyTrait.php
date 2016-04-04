@@ -1,6 +1,8 @@
 <?php
 namespace andrefelipe\Orchestrate\Properties;
 
+use andrefelipe\Orchestrate\Exception\MissingPropertyException;
+
 /**
  * Trait that implements the Key methods.
  *
@@ -17,12 +19,12 @@ trait KeyTrait
      * @param boolean $required
      *
      * @return string
-     * @throws \BadMethodCallException if 'key' is required but not set yet.
+     * @throws MissingPropertyException if 'key' is required but not set yet.
      */
     public function getKey($required = false)
     {
         if ($required && !$this->_key) {
-            throw new \BadMethodCallException('There is no key set yet. Do so through setKey() method.');
+            throw new MissingPropertyException('key', 'setKey');
         }
 
         return $this->_key;

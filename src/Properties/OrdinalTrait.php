@@ -1,6 +1,8 @@
 <?php
 namespace andrefelipe\Orchestrate\Properties;
 
+use andrefelipe\Orchestrate\Exception\MissingPropertyException;
+
 /**
  * Trait that implements the Ordinal methods.
  *
@@ -22,12 +24,12 @@ trait OrdinalTrait
      * @param boolean $required
      *
      * @return int
-     * @throws \BadMethodCallException if 'ordinal' is required but not set yet.
+     * @throws MissingPropertyException if 'ordinal' is required but not set yet.
      */
     public function getOrdinal($required = false)
     {
         if ($required && !$this->_ordinal) {
-            throw new \BadMethodCallException('There is no ordinal set yet. Do so through setOrdinal() method.');
+            throw new MissingPropertyException('ordinal', 'setOrdinal');
         }
 
         return $this->_ordinal;

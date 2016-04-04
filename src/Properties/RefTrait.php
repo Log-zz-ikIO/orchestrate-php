@@ -1,6 +1,8 @@
 <?php
 namespace andrefelipe\Orchestrate\Properties;
 
+use andrefelipe\Orchestrate\Exception\MissingPropertyException;
+
 /**
  * Trait that implements the Ref methods.
  *
@@ -17,12 +19,12 @@ trait RefTrait
      * @param boolean $required
      *
      * @return string
-     * @throws \BadMethodCallException if 'ref' is required but not set yet.
+     * @throws MissingPropertyException if 'ref' is required but not set yet.
      */
     public function getRef($required = false)
     {
         if ($required && !$this->_ref) {
-            throw new \BadMethodCallException('There is no ref set yet. Do so through setRef() method.');
+            throw new MissingPropertyException('ref', 'setRef');
         }
 
         return $this->_ref;
@@ -46,13 +48,19 @@ trait RefTrait
         $this->_ref = !empty($etag) ? trim($etag[0], '"') : null;
     }
 
+    /**
+     * @param mixed $ref
+     *
+     * @return string
+     * @throws MissingPropertyException if 'ref' is not set yet.
+     */
     protected function getValidRef($ref = true)
     {
         if ($ref === true) {
-            $ref = $this->getRef();
+            $ref = $this->getRef(true);
         }
         if (empty($ref) || !is_string($ref)) {
-            throw new \BadMethodCallException('A valid \'ref\' value is required.');
+            throw new MissingPropertyException('ref');
         }
         return $ref;
     }

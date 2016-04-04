@@ -1,6 +1,8 @@
 <?php
 namespace andrefelipe\Orchestrate\Properties;
 
+use andrefelipe\Orchestrate\Exception\MissingPropertyException;
+
 /**
  * Trait that implements the Timestamp methods.
  *
@@ -23,12 +25,12 @@ trait TimestampTrait
      * @param boolean $required
      *
      * @return string|int
-     * @throws \BadMethodCallException if 'timestamp' is required but not set yet.
+     * @throws MissingPropertyException if 'timestamp' is required but not set yet.
      */
     public function getTimestamp($required = false)
     {
         if ($required && !$this->_timestamp) {
-            throw new \BadMethodCallException('There is no timestamp set yet. Do so through setTimestamp() method.');
+            throw new MissingPropertyException('timestamp', 'setTimestamp');
         }
 
         return $this->_timestamp;

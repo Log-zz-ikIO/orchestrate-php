@@ -1,6 +1,8 @@
 <?php
 namespace andrefelipe\Orchestrate\Properties;
 
+use andrefelipe\Orchestrate\Exception\MissingPropertyException;
+
 /**
  * Trait that implements the Type methods.
  *
@@ -17,12 +19,12 @@ trait TypeTrait
      * @param boolean $required
      *
      * @return string
-     * @throws \BadMethodCallException if 'type' is required but not set yet.
+     * @throws MissingPropertyException if 'type' is required but not set yet.
      */
     public function getType($required = false)
     {
         if ($required && !$this->_type) {
-            throw new \BadMethodCallException('There is no type set yet. Do so through setType() method.');
+            throw new MissingPropertyException('type', 'setType');
         }
 
         return $this->_type;

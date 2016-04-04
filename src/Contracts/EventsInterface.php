@@ -2,6 +2,7 @@
 namespace andrefelipe\Orchestrate\Contracts;
 
 use andrefelipe\Orchestrate\Query\TimeRangeBuilder;
+use andrefelipe\Orchestrate\Exception\MissingPropertyException;
 
 /**
  * Define the Events minimum required interface.
@@ -42,7 +43,7 @@ interface EventsInterface extends ListInterface
      * @param boolean $required
      *
      * @return string
-     * @throws \BadMethodCallException if 'type' is required but not set yet.
+     * @throws MissingPropertyException if 'type' is required but not set yet.
      */
     public function getType($required = false);
 

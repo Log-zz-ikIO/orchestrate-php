@@ -1,6 +1,8 @@
 <?php
 namespace andrefelipe\Orchestrate\Properties;
 
+use andrefelipe\Orchestrate\Exception\MissingPropertyException;
+
 /**
  * Trait that implements the Collection methods.
  *
@@ -19,12 +21,12 @@ trait CollectionTrait
      * @param boolean $required
      *
      * @return null|string
-     * @throws \BadMethodCallException if 'collection' is required but not set yet.
+     * @throws MissingPropertyException if 'collection' is required but not set yet.
      */
     public function getCollection($required = false)
     {
         if ($required && !$this->_collection) {
-            throw new \BadMethodCallException('There is no collection set yet. Do so through setCollection() method.');
+            throw new MissingPropertyException('collection', 'setCollection');
         }
 
         return $this->_collection;
