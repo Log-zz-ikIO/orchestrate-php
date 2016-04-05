@@ -22,11 +22,6 @@ abstract class AbstractConnection implements ConnectionInterface
     private $_httpClient;
 
     /**
-     * @var array
-     */
-    private $_bodyArray = [];
-
-    /**
      * @var PromiseInterface
      */
     private $_promise = null;
@@ -35,6 +30,11 @@ abstract class AbstractConnection implements ConnectionInterface
      * @var ResponseInterface
      */
     private $_response = null;
+
+    /**
+     * @var array
+     */
+    private $_bodyArray = [];
 
     /**
      * @var string
@@ -76,6 +76,7 @@ abstract class AbstractConnection implements ConnectionInterface
         $this->_response = null;
         $this->_bodyArray = [];
         $this->_reasonPhrase = '';
+        $this->_exception = null;
     }
 
     public function getResponse()
@@ -237,6 +238,7 @@ abstract class AbstractConnection implements ConnectionInterface
                 // set response
                 $self->transferResponseData($response);
 
+                // return the item itself
                 return $self;
             },
             static function (RequestException $e) use ($self) {
@@ -244,17 +246,20 @@ abstract class AbstractConnection implements ConnectionInterface
                 // clear out
                 $self->_promise = null;
 
-                // set values
-                $self->_exception = $e;
+                // set exception
+                $self->setException($e);
 
+                // set response, if there is one
                 if ($e->hasResponse()) {
-                    // set response, if there is one
                     $self->transferResponseData($e->getResponse());
-                } else {
-                    // set just the error message
-                    $self->_reasonPhrase = $e->getMessage();
+
+                    // honor the Orchestrate error messages
+                    if (!empty($self->_bodyArray['message'])) {
+                        $self->_reasonPhrase = $self->_bodyArray['message'];
+                    }
                 }
 
+                // return exception, with possibility to get the item back
                 return new RejectedPromise(
                     new RejectedPromiseException($self->getReasonPhrase(), $self)
                 );
@@ -278,21 +283,11 @@ abstract class AbstractConnection implements ConnectionInterface
         $this->_reasonPhrase = $response->getReasonPhrase();
 
         // set body
-        $this->_bodyArray = json_decode($response->getBody(), true) ?: [];
-
-        // TODO should reset exception in case of success
-        // should create another exception in case of error
-
-        // TODO usar o Guzzle json error, e guardar o exception tambem
-
-        // set status message
-        if ($this->isError()) {
-
-            // honor the Orchestrate error messages
-            if (!empty($this->_bodyArray['message'])) {
-                $this->_reasonPhrase = $this->_bodyArray['message'];
-            }
-
+        try {
+            $json = $response->getBody();
+            $this->_bodyArray = \GuzzleHttp\json_decode($json, true);
+        } catch (\InvalidArgumentException $e) {            
+            $this->setException($e);
         }
     }
 }
