@@ -86,7 +86,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     public function getAsync($ref = null)
     {
-        return $this->send(
+        return $this->requestAsync(
             // method
             'GET',
             // uri
@@ -151,7 +151,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     private function _putAsync(array $value = null, $ref = null)
     {
-        return $this->send(
+        return $this->requestAsync(
             // method
             'PUT',
             // uri
@@ -196,7 +196,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     public function postAsync(array $value = null)
     {
-        return $this->send(
+        return $this->requestAsync(
             // method
             'POST',
             // uri
@@ -254,7 +254,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     private function _patchAsync(PatchBuilder $operations, $ref = null, $reload = false)
     {
-        return $this->send(
+        return $this->requestAsync(
             // method
             'PATCH',
             // uri
@@ -318,7 +318,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     private function _patchMergeAsync(array $value, $ref = null, $reload = false)
     {
-        return $this->send(
+        return $this->requestAsync(
             // method
             'PATCH',
             // uri
@@ -381,7 +381,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     private function _deleteAsync($ref = null)
     {
-        return $this->send(
+        return $this->requestAsync(
             // method
             'DELETE',
             // uri
@@ -424,7 +424,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     public function purgeAsync()
     {
-        return $this->send(
+        return $this->requestAsync(
             // method
             'DELETE',
             // uri

@@ -118,7 +118,7 @@ abstract class AbstractItem extends AbstractConnection implements ItemInterface
 
     public function reset()
     {
-        parent::reset();
+        $this->clearResponse();
         $this->_ref = null;
         $this->_reftime = null;
         $this->_score = null;
@@ -262,41 +262,44 @@ abstract class AbstractItem extends AbstractConnection implements ItemInterface
 
     /**
      * @param string $name The property name to map methods to.
-     * @param boolean|string $getterName The getter method name. Method must exist in current object.
+     * @param boolean|string $getter The getter method name. Method must exist in current object.
      *                                   Defaults to true, which will automatically try to find a
      *                                   method named after your property with camelCase, for example 'getName'.
-     * @param boolean|string $setterName The setter method name. Method must exist in current object.
+     * @param boolean|string $setter The setter method name. Method must exist in current object.
      *                                   Defaults to true, which will automatically try to find a
      *                                   method named after your property with camelCase, for example 'setName'.
+     *
+     * @throws \InvalidArgumentException If a matching getter or setter
+     * could not be found
      */
-    protected function mapProperty($name, $getterName = true, $setterName = true)
+    protected function mapProperty($name, $getter = true, $setter = true)
     {
         $this->_propertyMap[$name] = [];
 
-        if ($getterName === true || $setterName === true) {
+        if ($getter === true || $setter === true) {
             $capitalized = str_replace(' ', '', ucwords(str_replace(['_', '-'], ' ', $name)));
 
-            if ($getterName === true) {
-                $getterName = 'get'.$capitalized;
+            if ($getter === true) {
+                $getter = 'get'.$capitalized;
             }
-            if ($setterName === true) {
-                $setterName = 'set'.$capitalized;
-            }
-        }
-
-        if ($getterName) {
-            if (method_exists($this, $getterName)) {
-                $this->_propertyMap[$name][0] = [$this, $getterName];
-            } else {
-                throw new \BadMethodCallException('A matching getter method could not be found, tried: '.$getterName);
+            if ($setter === true) {
+                $setter = 'set'.$capitalized;
             }
         }
 
-        if ($setterName) {
-            if (method_exists($this, $setterName)) {
-                $this->_propertyMap[$name][1] = [$this, $setterName];
+        if ($getter) {
+            if (method_exists($this, $getter)) {
+                $this->_propertyMap[$name][0] = [$this, $getter];
             } else {
-                throw new \BadMethodCallException('A matching setter method could not be found, tried: '.$setterName);
+                throw new \InvalidArgumentException('A matching getter method could not be found, tried: '.$getter);
+            }
+        }
+
+        if ($setter) {
+            if (method_exists($this, $setter)) {
+                $this->_propertyMap[$name][1] = [$this, $setter];
+            } else {
+                throw new \InvalidArgumentException('A matching setter method could not be found, tried: '.$setter);
             }
         }
     }

@@ -102,7 +102,7 @@ abstract class AbstractList extends AbstractConnection implements ListInterface
 
     public function reset()
     {
-        parent::reset();
+        $this->clearResponse();
         $this->_totalCount = null;
         $this->_nextUrl = '';
         $this->_prevUrl = '';
@@ -271,7 +271,7 @@ abstract class AbstractList extends AbstractConnection implements ListInterface
 
         // set properties
         $body = $this->getBodyArray();
-        
+
         if (!empty($body['results'])) {
             $this->_results = array_map(
                 [$this, 'createInstance'],
@@ -287,6 +287,6 @@ abstract class AbstractList extends AbstractConnection implements ListInterface
         if (!empty($body['prev'])) {
             $this->_prevUrl = $body['prev'];
         }
-    
+
     }
 }

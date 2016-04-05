@@ -2,6 +2,7 @@
 namespace andrefelipe\Orchestrate;
 
 use andrefelipe\Orchestrate\Contracts\ConnectionInterface;
+use andrefelipe\Orchestrate\Exception\MissingPropertyException;
 use andrefelipe\Orchestrate\Exception\RejectedPromiseException;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
@@ -28,7 +29,7 @@ abstract class AbstractConnection implements ConnectionInterface
     /**
      * @var PromiseInterface
      */
-    protected $_promise = null;
+    private $_promise = null;
 
     /**
      * @var ResponseInterface
@@ -63,14 +64,15 @@ abstract class AbstractConnection implements ConnectionInterface
     {
         if ($this->_promise) {
             $this->_promise->wait(false);
-            $this->_promise = null;
         }
     }
 
-    public function reset()
+    protected function clearResponse()
     {
+        // wait for any other async requests to finish
         $this->settlePromise();
 
+        // reset local vars
         $this->_response = null;
         $this->_bodyArray = [];
         $this->_reasonPhrase = '';
@@ -115,6 +117,12 @@ abstract class AbstractConnection implements ConnectionInterface
         return $this->_exception;
     }
 
+    protected function setException(\Exception $e)
+    {
+        $this->_exception = $e;
+        $this->_reasonPhrase = $e->getMessage();
+    }
+
     public function getOrchestrateRequestId()
     {
         $this->settlePromise();
@@ -145,46 +153,72 @@ abstract class AbstractConnection implements ConnectionInterface
      *
      * @return self
      */
-    protected function request($method, $uri = null, array $options = [])
+    protected function request($method, $uri = '', array $options = [])
     {
-        $this->requestAsync($method, $uri, $options);
+        $this->requestAsync(
+            $method,
+            function () use ($uri) {
+                return $uri;
+            },
+            function () use ($options) {
+                return $options;
+            }
+        );
         $this->settlePromise();
         return $this;
-    } // TODO remover se nao usar
+    } // TODO remove this method later, should not be used when full async is ready
 
     /**
      * Request asynchronously using the current HTTP client, preparing the
      * success and exception callbacks to transfer results in.
      *
-     * More information on the options please go to the Guzzle docs.
-     *
-     * @param string       $method  HTTP method
-     * @param string|array $uri     URI
-     * @param array        $options Request options to apply.
+     * @param string   $method          HTTP method
+     * @param callable $uriCallable     Must return array of uri parts
+     * @param callable $optionsCallable Must return array of request options
+     * @param callable $onFulfilled     Option callback to chain on fulfillment
+     * @param callable $onRejected      Option callback to chain on rejection
      *
      * @return PromiseInterface
      */
-    protected function requestAsync($method, $uri = null, array $options = [])
-    {
-        // wait for any other async requests to finish
-        $this->settlePromise();
+    protected function requestAsync(
+                 $method,
+        callable $uriCallable = null,
+        callable $optionsCallable = null,
+        callable $onFulfilled = null,
+        callable $onRejected = null
+    ) {
+        // clear previous responses and settle any async operation
+        $this->clearResponse();
 
-        // reset local vars
-        $this->_response = null;
-        $this->_bodyArray = [];
-        $this->_reasonPhrase = '';
+        // define request options
+        $uri = null;
+        $options = [];
+        try {
+            // uri
+            if ($uriCallable) {
+                $uri = (array) $uriCallable($this);
 
-        // store in var as we use static functions on the callbacks
-        $self = $this;
+                // sanitize uri parts, RFC 3986
+                $uri = implode('/', array_map('rawurlencode', $uri));
+            }
 
-        // sanitize uri parts
-        if (is_array($uri)) {
-            $uri = implode('/', array_map('rawurlencode', $uri)); // RFC 3986
-        }
+            // options
+            if ($optionsCallable) {
+                $options = (array) $optionsCallable($this);
 
-        // safely build query
-        if (isset($options['query']) && is_array($options['query'])) {
-            $options['query'] = http_build_query($options['query'], null, '&', PHP_QUERY_RFC3986);
+                // safely build query string
+                if (isset($options['query']) && is_array($options['query'])) {
+                    $options['query'] = http_build_query(
+                        $options['query'],
+                        null,
+                        '&',
+                        PHP_QUERY_RFC3986
+                    );
+                }
+            }
+        } catch (MissingPropertyException $e) {
+            $this->setException($e);
+            return new RejectedPromiseException($this->getReasonPhrase(), $this);
         }
 
         // enforce http exceptions
@@ -192,6 +226,7 @@ abstract class AbstractConnection implements ConnectionInterface
 
         // request
         $promise = $this->getHttpClient()->requestAsync($method, $uri, $options);
+        $self = $this;
 
         $this->_promise = $promise->then(
             static function (ResponseInterface $response) use ($self) {
@@ -226,6 +261,11 @@ abstract class AbstractConnection implements ConnectionInterface
             }
         );
 
+        // chain
+        if ($onFulfilled || $onRejected) {
+            $this->_promise = $this->_promise->then($onFulfilled, $onRejected);
+        }
+
         return $this->_promise;
     }
 
@@ -234,18 +274,25 @@ abstract class AbstractConnection implements ConnectionInterface
         // set response
         $this->_response = $response;
 
+        // set HTTP Reason-Phrase
+        $this->_reasonPhrase = $response->getReasonPhrase();
+
         // set body
         $this->_bodyArray = json_decode($response->getBody(), true) ?: [];
 
-        // TODO usar o Guzzle json error, e guardar o exception tambem...
+        // TODO should reset exception in case of success
+        // should create another exception in case of error
+
+        // TODO usar o Guzzle json error, e guardar o exception tambem
 
         // set status message
-        if ($this->isError() && !empty($this->_bodyArray['message'])) {
+        if ($this->isError()) {
+
             // honor the Orchestrate error messages
-            $this->_reasonPhrase = $this->_bodyArray['message'];
-        } else {
-            // continue with HTTP Reason-Phrase
-            $this->_reasonPhrase = $response->getReasonPhrase();
+            if (!empty($this->_bodyArray['message'])) {
+                $this->_reasonPhrase = $this->_bodyArray['message'];
+            }
+
         }
     }
 }

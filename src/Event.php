@@ -96,29 +96,30 @@ class Event extends AbstractItem implements EventInterface
 
     public function getAsync()
     {
-        // define request options
-        $path = [
-            $this->getCollection(true),
-            $this->getKey(true),
-            'events',
-            $this->getType(true),
-            $this->getTimestamp(true),
-            $this->getOrdinal(true),
-        ];
-
-        // request
-        $promise = $this->requestAsync('GET', $path);
-
-        // chain promise
-        $this->_promise = $promise->then(
+        return $this->requestAsync(
+            // method
+            'GET',
+            // uri
+            static function ($self) {
+                $uri = [
+                    $self->getCollection(true),
+                    $self->getKey(true),
+                    'events',
+                    $self->getType(true),
+                    $self->getTimestamp(true),
+                    $self->getOrdinal(true),
+                ];
+                return $uri;
+            },
+            // options
+            null,
+            // onFulfilled
             static function ($self) {
 
                 $self->init($self->getBodyArray());
                 return $self;
             }
         );
-
-        return $this->_promise;
     }
 
     public function put(array $value = null)
@@ -133,12 +134,12 @@ class Event extends AbstractItem implements EventInterface
 
     public function putIf($ref = true, array $value = null)
     {
-        return $this->_put($value, $this->getValidRef($ref));
+        return $this->_put($value, $ref);
     }
 
     public function putIfAsync($ref = true, array $value = null)
     {
-        return $this->_putAsync($value, $this->getValidRef($ref));
+        return $this->_putAsync($value, $ref);
     }
 
     private function _put(array $value = null, $ref = null)
@@ -150,29 +151,33 @@ class Event extends AbstractItem implements EventInterface
 
     private function _putAsync(array $value = null, $ref = null)
     {
-        $newValue = $value === null ? $this->getValue() : $value;
-
-        // define request options
-        $path = [
-            $this->getCollection(true),
-            $this->getKey(true),
-            'events',
-            $this->getType(true),
-            $this->getTimestamp(true),
-            $this->getOrdinal(true),
-        ];
-
-        $options = ['json' => $newValue];
-
-        if ($ref) {
-            $options['headers'] = ['If-Match' => '"'.$ref.'"'];
-        }
-
-        // request
-        $promise = $this->requestAsync('PUT', $path, $options);
-
-        // chain promise
-        $this->_promise = $promise->then(
+        return $this->requestAsync(
+            // method
+            'PUT',
+            // uri
+            static function ($self) {
+                $uri = [
+                    $self->getCollection(true),
+                    $self->getKey(true),
+                    'events',
+                    $self->getType(true),
+                    $self->getTimestamp(true),
+                    $self->getOrdinal(true),
+                ];
+                return $uri;
+            },
+            // options
+            static function ($self) use ($ref, $value) {
+                $options = [
+                    'json' => $value === null ? $self->getValue() : $value,
+                ];
+                if ($ref) {
+                    $ref = $self->getValidRef($ref);
+                    $options['headers'] = ['If-Match' => '"'.$ref.'"'];
+                }
+                return $options;
+            },
+            // onFulfilled
             static function ($self) use ($value) {
 
                 $self->_reftime = null;
@@ -187,8 +192,6 @@ class Event extends AbstractItem implements EventInterface
                 return $self;
             }
         );
-
-        return $this->_promise;
     }
 
     public function post(array $value = null, $timestamp = null)
@@ -200,28 +203,34 @@ class Event extends AbstractItem implements EventInterface
 
     public function postAsync(array $value = null, $timestamp = null)
     {
-        $path = [
-            $this->getCollection(true),
-            $this->getKey(true),
-            'events',
-            $this->getType(true),
-        ];
-
-        if ($timestamp === true) {
-            $timestamp = $this->getTimestamp();
-        }
-        if ($timestamp) {
-            $path[] = $timestamp;
-        }
-
-        $newValue = $value === null ? $this->getValue() : $value;
-
-        // request
-        $promise = $this->requestAsync('POST', $path, ['json' => $newValue]);
-
-        $this->_promise = $promise->then(
+        return $this->requestAsync(
+            // method
+            'POST',
+            // uri
+            static function ($self) use ($timestamp) {
+                $uri = [
+                    $self->getCollection(true),
+                    $self->getKey(true),
+                    'events',
+                    $self->getType(true),
+                ];
+                if ($timestamp === true) {
+                    $timestamp = $self->getTimestamp(true);
+                }
+                if ($timestamp) {
+                    $uri[] = $timestamp;
+                }
+                return $uri;
+            },
+            // options
             static function ($self) use ($value) {
-
+                $options = [
+                    'json' => $value === null ? $self->getValue() : $value,
+                ];
+                return $options;
+            },
+            // onFulfilled
+            static function ($self) use ($value) {
                 $self->_reftime = null;
                 $self->_ordinalStr = null;
                 $self->setRefFromETag();
@@ -234,8 +243,6 @@ class Event extends AbstractItem implements EventInterface
                 return $self;
             }
         );
-
-        return $this->_promise;
     }
 
     public function delete()
@@ -250,12 +257,12 @@ class Event extends AbstractItem implements EventInterface
 
     public function deleteIf($ref = true)
     {
-        return $this->_delete($this->getValidRef($ref));
+        return $this->_delete($ref);
     }
 
     public function deleteIfAsync($ref = true)
     {
-        return $this->_deleteAsync($this->getValidRef($ref));
+        return $this->_deleteAsync($ref);
     }
 
     private function _delete($ref = null)
@@ -267,28 +274,35 @@ class Event extends AbstractItem implements EventInterface
 
     private function _deleteAsync($ref = null)
     {
-        // define request options
-        $path = [
-            $this->getCollection(true),
-            $this->getKey(true),
-            'events',
-            $this->getType(true),
-            $this->getTimestamp(true),
-            $this->getOrdinal(true),
-        ];
-
-        $options = ['query' => ['purge' => 'true']]; // currently required by Orchestrate
-
-        if ($ref) {
-            $options['headers'] = ['If-Match' => '"'.$ref.'"'];
-        }
-
-        // request
-        $promise = $this->requestAsync('DELETE', $path, $options);
-
-        $this->_promise = $promise->then(
+        return $this->requestAsync(
+            // method
+            'DELETE',
+            // uri
             static function ($self) {
-
+                $uri = [
+                    $self->getCollection(true),
+                    $self->getKey(true),
+                    'events',
+                    $self->getType(true),
+                    $self->getTimestamp(true),
+                    $self->getOrdinal(true),
+                ];
+                return $uri;
+            },
+            // options
+            static function ($self) use ($ref) {
+                $options = [
+                    'query' => ['purge' => 'true'],
+                    // currently required by Orchestrate
+                ];
+                if ($ref) {
+                    $ref = $self->getValidRef($ref);
+                    $options['headers'] = ['If-Match' => '"'.$ref.'"'];
+                }
+                return $options;
+            },
+            // onFulfilled
+            static function ($self) {
                 $self->_ref = null;
                 $self->_reftime = null;
                 $self->_ordinalStr = null;
@@ -299,8 +313,6 @@ class Event extends AbstractItem implements EventInterface
                 return $self;
             }
         );
-
-        return $this->_promise;
     }
 
     private function setTimestampAndOrdinalFromLocation()

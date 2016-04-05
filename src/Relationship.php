@@ -117,25 +117,22 @@ class Relationship extends AbstractItem implements RelationshipInterface
 
     public function getAsync()
     {
-        // define request options
-        $path = $this->formRelationPath();
-
-        // Orchestrate doesn't support relationship history (refs) yet
-
-        // request
-        $promise = $this->requestAsync('GET', $path);
-
-        // chain promise
-        $this->_promise = $promise->then(
+        return $this->requestAsync(
+            // method
+            'GET',
+            // uri
             static function ($self) {
-
+                return $self->formRelationPath();
+            },
+            // options
+            null,
+            // onFulfilled
+            static function ($self) {
                 $self->setValue($self->getBodyArray());
                 $self->setRefFromETag();
                 return $self;
             }
         );
-
-        return $this->_promise;
     }
 
     public function put(array $value = null)
@@ -150,12 +147,12 @@ class Relationship extends AbstractItem implements RelationshipInterface
 
     public function putIf($ref = true, array $value = null)
     {
-        return $this->_put($value, $this->getValidRef($ref));
+        return $this->_put($value, $ref);
     }
 
     public function putIfAsync($ref = true, array $value = null)
     {
-        return $this->_putAsync($value, $this->getValidRef($ref));
+        return $this->_putAsync($value, $ref);
     }
 
     public function putIfNone(array $value = null)
@@ -177,25 +174,30 @@ class Relationship extends AbstractItem implements RelationshipInterface
 
     private function _putAsync(array $value = null, $ref = null)
     {
-        $newValue = $value === null ? $this->getValue() : $value;
+        return $this->requestAsync(
+            // method
+            'PUT',
+            // uri
+            static function ($self) {
+                return $self->formRelationPath();
+            },
+            // options
+            static function ($self) use ($ref, $value) {
 
-        // define request options
-        $path = $this->formRelationPath();
-        $options = ['json' => empty($newValue) ? null : $newValue];
-
-        if ($ref) {
-            $options['headers'] = ['If-Match' => '"'.$ref.'"'];
-        } elseif ($ref === false) {
-            $options['headers'] = ['If-None-Match' => '"*"'];
-        }
-
-        // request
-        $promise = $this->requestAsync('PUT', $path, $options);
-
-        // chain promise
-        $this->_promise = $promise->then(
+                $newValue = $value === null ? $self->getValue() : $value;
+                $options = [
+                    'json' => empty($newValue) ? null : $newValue,
+                ];
+                if ($ref) {
+                    $ref = $self->getValidRef($ref);
+                    $options['headers'] = ['If-Match' => '"'.$ref.'"'];
+                } elseif ($ref === false) {
+                    $options['headers'] = ['If-None-Match' => '"*"'];
+                }
+                return $options;
+            },
+            // onFulfilled
             static function ($self) use ($value) {
-
                 if ($value !== null) {
                     $self->resetValue();
                     $self->setValue($value);
@@ -204,8 +206,6 @@ class Relationship extends AbstractItem implements RelationshipInterface
                 return $self;
             }
         );
-
-        return $this->_promise;
     }
 
     public function putBoth(array $value = null)
@@ -216,7 +216,7 @@ class Relationship extends AbstractItem implements RelationshipInterface
     }
 
     public function putBothAsync(array $value = null)
-    {   
+    {
         $promises = [];
         $promises[] = $this->putAsync($value);
 
@@ -240,26 +240,28 @@ class Relationship extends AbstractItem implements RelationshipInterface
 
     public function deleteAsync()
     {
-        $options = ['query' => ['purge' => 'true']];
-        $path = $this->formRelationPath();
-
-        // request
-        $promise = $this->requestAsync('DELETE', $path, $options);
-
-        $this->_promise = $promise->then(
+        return $this->requestAsync(
+            // method
+            'DELETE',
+            // uri
             static function ($self) {
-
+                return $self->formRelationPath();
+            },
+            // options
+            static function ($self) {
+                return ['query' => ['purge' => 'true']];
+            },
+            // onFulfilled
+            static function ($self) {
                 $self->_score = null;
                 $self->_distance = null;
-                $this->_ref = null;
+                $self->_ref = null;
                 $self->_reftime = null;
                 $self->resetValue();
 
                 return $self;
             }
         );
-
-        return $this->_promise;
     }
 
     public function deleteBoth(array $value = null)
@@ -270,7 +272,7 @@ class Relationship extends AbstractItem implements RelationshipInterface
     }
 
     public function deleteBothAsync(array $value = null)
-    {   
+    {
         $promises = [];
         $promises[] = $this->deleteAsync($value);
 
