@@ -86,30 +86,30 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     public function getAsync($ref = null)
     {
-        // define request options
-        $path = [
-            $this->getCollection(true),
-            $this->getKey(true),
-        ];
-        if ($ref) {
-            $path[] = 'refs';
-            $path[] = trim($ref, '"');
-        }
-
-        // request
-        $promise = $this->requestAsync('GET', $path);
-
-        // chain promise
-        $this->_promise = $promise->then(
+        return $this->send(
+            // method
+            'GET',
+            // uri
+            static function ($self) use ($ref) {
+                $uri = [
+                    $self->getCollection(true),
+                    $self->getKey(true),
+                ];
+                if ($ref) {
+                    $uri[] = 'refs';
+                    $uri[] = $self->getValidRef($ref);
+                }
+                return $uri;
+            },
+            // options
+            null,
+            // onFulfilled
             static function ($self) {
-
                 $self->setValue($self->getBodyArray());
                 $self->setRefFromETag();
                 return $self;
             }
         );
-
-        return $this->_promise;
     }
 
     public function put(array $value = null)
@@ -124,12 +124,12 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     public function putIf($ref = true, array $value = null)
     {
-        return $this->_put($value, $this->getValidRef($ref));
+        return $this->_put($value, $ref);
     }
 
     public function putIfAsync($ref = true, array $value = null)
     {
-        return $this->_putAsync($value, $this->getValidRef($ref));
+        return $this->_putAsync($value, $ref);
     }
 
     public function putIfNone(array $value = null)
@@ -151,28 +151,32 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     private function _putAsync(array $value = null, $ref = null)
     {
-        $newValue = $value === null ? $this->getValue() : $value;
-
-        // define request options
-        $path = [
-            $this->getCollection(true),
-            $this->getKey(true),
-        ];
-        $options = ['json' => $newValue];
-
-        if ($ref) {
-            $options['headers'] = ['If-Match' => '"'.$ref.'"'];
-        } elseif ($ref === false) {
-            $options['headers'] = ['If-None-Match' => '"*"'];
-        }
-
-        // request
-        $promise = $this->requestAsync('PUT', $path, $options);
-
-        // chain promise
-        $this->_promise = $promise->then(
+        return $this->send(
+            // method
+            'PUT',
+            // uri
+            static function ($self) {
+                $uri = [
+                    $self->getCollection(true),
+                    $self->getKey(true),
+                ];
+                return $uri;
+            },
+            // options
+            static function ($self) use ($ref, $value) {
+                $options = [
+                    'json' => $value === null ? $self->getValue() : $value,
+                ];
+                if ($ref) {
+                    $ref = $self->getValidRef($ref);
+                    $options['headers'] = ['If-Match' => '"'.$ref.'"'];
+                } elseif ($ref === false) {
+                    $options['headers'] = ['If-None-Match' => '"*"'];
+                }
+                return $options;
+            },
+            // onFulfilled
             static function ($self) use ($value) {
-
                 if ($value !== null) {
                     $self->resetValue();
                     $self->setValue($value);
@@ -181,8 +185,6 @@ class KeyValue extends AbstractItem implements KeyValueInterface
                 return $self;
             }
         );
-
-        return $this->_promise;
     }
 
     public function post(array $value = null)
@@ -194,16 +196,25 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     public function postAsync(array $value = null)
     {
-        $newValue = $value === null ? $this->getValue() : $value;
-
-        $path = [$this->getCollection(true)];
-
-        // request
-        $promise = $this->requestAsync('POST', $path, ['json' => $newValue]);
-
-        $this->_promise = $promise->then(
+        return $this->send(
+            // method
+            'POST',
+            // uri
+            static function ($self) {
+                $uri = [
+                    $self->getCollection(true),
+                ];
+                return $uri;
+            },
+            // options
             static function ($self) use ($value) {
-
+                $options = [
+                    'json' => $value === null ? $self->getValue() : $value,
+                ];
+                return $options;
+            },
+            // onFulfilled
+            static function ($self) use ($value) {
                 if ($value !== null) {
                     $self->resetValue();
                     $self->setValue($value);
@@ -212,8 +223,6 @@ class KeyValue extends AbstractItem implements KeyValueInterface
                 return $self;
             }
         );
-
-        return $this->_promise;
     }
 
     public function patch(PatchBuilder $operations, $reload = false)
@@ -228,12 +237,12 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     public function patchIf($ref = true, PatchBuilder $operations, $reload = false)
     {
-        return $this->_patch($operations, $this->getValidRef($ref), $reload);
+        return $this->_patch($operations, $ref, $reload);
     }
 
     public function patchIfAsync($ref = true, PatchBuilder $operations, $reload = false)
     {
-        return $this->_patchAsync($operations, $this->getValidRef($ref), $reload);
+        return $this->_patchAsync($operations, $ref, $reload);
     }
 
     private function _patch(PatchBuilder $operations, $ref = null, $reload = false)
@@ -245,35 +254,39 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     private function _patchAsync(PatchBuilder $operations, $ref = null, $reload = false)
     {
-        // define request options
-        $path = [
-            $this->getCollection(true),
-            $this->getKey(true),
-        ];
-        $options = ['json' => $operations->toArray()];
-
-        if ($ref) {
-            $options['headers'] = ['If-Match' => '"'.$ref.'"'];
-        }
-
-        // request
-        $promise = $this->requestAsync('PATCH', $path, $options);
-
-        $this->_promise = $promise->then(
+        return $this->send(
+            // method
+            'PATCH',
+            // uri
+            static function ($self) {
+                $uri = [
+                    $self->getCollection(true),
+                    $self->getKey(true),
+                ];
+                return $uri;
+            },
+            // options
+            static function ($self) use ($operations, $ref) {
+                $options = [
+                    'json' => $operations->toArray(),
+                ];
+                if ($ref) {
+                    $ref = $self->getValidRef($ref);
+                    $options['headers'] = ['If-Match' => '"'.$ref.'"'];
+                }
+                return $options;
+            },
+            // onFulfilled
             static function ($self) use ($reload) {
-
                 $self->setRefFromETag();
 
                 // reload the Value from API
                 if ($reload) {
                     $self->get($self->getRef());
                 }
-
                 return $self;
             }
         );
-
-        return $this->_promise;
     }
 
     public function patchMerge(array $value, $reload = false)
@@ -288,12 +301,12 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     public function patchMergeIf($ref, array $value, $reload = false)
     {
-        return $this->_patchMerge($value, $this->getValidRef($ref), $reload);
+        return $this->_patchMerge($value, $ref, $reload);
     }
 
     public function patchMergeIfAsync($ref, array $value, $reload = false)
     {
-        return $this->_patchMergeAsync($value, $this->getValidRef($ref), $reload);
+        return $this->_patchMergeAsync($value, $ref, $reload);
     }
 
     private function _patchMerge(array $value, $ref = null, $reload = false)
@@ -305,35 +318,38 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     private function _patchMergeAsync(array $value, $ref = null, $reload = false)
     {
-        // define request options
-        $path = [
-            $this->getCollection(true),
-            $this->getKey(true),
-        ];
-        $options = ['json' => $value];
+        return $this->send(
+            // method
+            'PATCH',
+            // uri
+            static function ($self) {
+                $uri = [
+                    $self->getCollection(true),
+                    $self->getKey(true),
+                ];
+                return $uri;
+            },
+            // options
+            static function ($self) use ($value, $ref) {
+                $options = ['json' => $value];
 
-        if ($ref) {
-            $options['headers'] = ['If-Match' => '"'.$ref.'"'];
-        }
-
-        // request
-        $promise = $this->requestAsync('PATCH', $path, $options);
-
-        $this->_promise = $promise->then(
+                if ($ref) {
+                    $ref = $self->getValidRef($ref);
+                    $options['headers'] = ['If-Match' => '"'.$ref.'"'];
+                }
+                return $options;
+            },
+            // onFulfilled
             static function ($self) use ($reload) {
-
                 $self->setRefFromETag();
 
                 // reload the Value from API
                 if ($reload) {
                     $self->get($self->getRef());
                 }
-
                 return $self;
             }
         );
-
-        return $this->_promise;
     }
 
     public function delete()
@@ -348,12 +364,12 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     public function deleteIf($ref = true)
     {
-        return $this->_delete($this->getValidRef($ref));
+        return $this->_delete($ref);
     }
 
     public function deleteIfAsync($ref = true)
     {
-        return $this->_deleteAsync($this->getValidRef($ref));
+        return $this->_deleteAsync($ref);
     }
 
     private function _delete($ref = null)
@@ -365,23 +381,29 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     private function _deleteAsync($ref = null)
     {
-        // define request options
-        $path = [
-            $this->getCollection(true),
-            $this->getKey(true),
-        ];
-        $options = [];
-
-        if ($ref) {
-            $options['headers'] = ['If-Match' => '"'.$ref.'"'];
-        }
-
-        // request
-        $promise = $this->requestAsync('DELETE', $path, $options);
-
-        $this->_promise = $promise->then(
+        return $this->send(
+            // method
+            'DELETE',
+            // uri
             static function ($self) {
+                $uri = [
+                    $self->getCollection(true),
+                    $self->getKey(true),
+                ];
+                return $uri;
+            },
+            // options
+            static function ($self) use ($ref) {
+                $options = [];
 
+                if ($ref) {
+                    $ref = $self->getValidRef($ref);
+                    $options['headers'] = ['If-Match' => '"'.$ref.'"'];
+                }
+                return $options;
+            },
+            // onFulfilled
+            static function ($self) {
                 $self->_score = null;
                 $self->_distance = null;
                 $self->_reftime = null;
@@ -391,8 +413,6 @@ class KeyValue extends AbstractItem implements KeyValueInterface
                 return $self;
             }
         );
-
-        return $this->_promise;
     }
 
     public function purge()
@@ -404,32 +424,35 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     public function purgeAsync()
     {
-        // define request options
-        $path = [
-            $this->getCollection(true),
-            $this->getKey(true),
-        ];
-        $options = ['query' => ['purge' => 'true']];
-
-        // request
-        $promise = $this->requestAsync('DELETE', $path, $options);
-
-        $this->_promise = $promise->then(
+        return $this->send(
+            // method
+            'DELETE',
+            // uri
             static function ($self) {
-
-                $this->_key = null;
-                $this->_ref = null;
-                $this->_score = null;
-                $this->_distance = null;
-                $this->_reftime = null;
-                $this->_tombstone = false;
-                $this->resetValue();
+                $uri = [
+                    $self->getCollection(true),
+                    $self->getKey(true),
+                ];
+                return $uri;
+            },
+            // options
+            static function ($self) {
+                $options = ['query' => ['purge' => 'true']];
+                return $options;
+            },
+            // onFulfilled
+            static function ($self) {
+                $self->_key = null;
+                $self->_ref = null;
+                $self->_score = null;
+                $self->_distance = null;
+                $self->_reftime = null;
+                $self->_tombstone = false;
+                $self->resetValue();
 
                 return $self;
             }
         );
-
-        return $this->_promise;
     }
 
     public function refs()
