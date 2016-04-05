@@ -1,6 +1,7 @@
 <?php
 namespace andrefelipe\Orchestrate;
 
+use andrefelipe\Orchestrate\Exception\RejectedPromiseException;
 use GuzzleHttp\Client as GuzzleClient;
 
 const DEFAULT_HOST = 'https://api.orchestrate.io';
@@ -43,6 +44,69 @@ function default_http_config($apiKey = null, $host = null, $version = null)
         'auth' => [$apiKey ?: getenv('ORCHESTRATE_API_KEY'), null],
     ];
 }
+
+/**
+ * Waits on all of the provided promises and returns the target objects.
+ *
+ * Returns an array that contains the value of each promise (in the same order
+ * the promises were provided). If any of the promises are rejected with
+ * RejectedPromiseException the target is returned, otherwise the 
+ * Exception is returned.
+ * 
+ * The only case an Exception is returned is if you customized the promised and
+ * opted to not return RejectedPromiseException, or if you are using promises 
+ * from other libraries.
+ *
+ * @param mixed $promises Iterable of PromiseInterface objects to wait on.
+ *
+ * @return array
+ */
+function resolve($promises)
+{
+    $results = [];
+
+    foreach ($promises as $key => $promise) {
+        try {
+            $results[$key] = $promise->wait();
+
+        } catch (RejectedPromiseException $e) {
+            $results[$key] = $e->getTarget();
+
+        } catch (\Exception $e) {
+            $results[$key] = $e;
+        }
+    }
+
+    return $results;
+}
+
+// function pool($promises, $concurrency=25)
+// {
+//     $results = [];
+
+//     return (new \GuzzleHttp\Promise\EachPromise(
+//         $promises,
+//         [
+//             'concurrency' => $concurrency,
+//             'fulfilled' => function ($value, $idx) use (&$results) {
+//                 $results[$idx] = $value;
+//             },
+//             'rejected' => function ($reason, $idx) use (&$results) {            
+//                 if ($reason instanceof RejectedPromiseException) {
+//                     $results[$idx] = $reason->getTarget();
+//                 } else {
+//                     $results[$idx] = $reason;
+//                 }
+//             },
+//         ],
+//     ))
+//     ->promise()
+//     ->then(function () use (&$results) {
+//         ksort($results);
+//         return $results;
+//     })
+//     ->wait();
+// }
 
 /**
  * Helper method to merge instance's public properties.
