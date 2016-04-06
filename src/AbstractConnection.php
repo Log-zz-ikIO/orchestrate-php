@@ -24,27 +24,27 @@ abstract class AbstractConnection implements ConnectionInterface
     /**
      * @var PromiseInterface
      */
-    private $_promise = null;
+    protected $_promise = null;
 
     /**
      * @var ResponseInterface
      */
-    private $_response = null;
+    protected $_response = null;
 
     /**
      * @var array
      */
-    private $_bodyArray = [];
+    protected $_bodyArray = [];
 
     /**
      * @var string
      */
-    private $_reasonPhrase = '';
+    protected $_reasonPhrase = '';
 
     /**
      * @var \Exception
      */
-    private $_exception = null;
+    protected $_exception = null;
 
     public function getHttpClient()
     {
