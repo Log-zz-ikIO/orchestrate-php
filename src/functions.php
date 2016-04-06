@@ -46,16 +46,14 @@ function default_http_config($apiKey = null, $host = null, $version = null)
 }
 
 /**
- * Waits on all of the provided promises and returns the target objects.
+ * Waits on all of the provided promises and returns the results, either the
+ * target object on success, or RejectedPromiseException on rejection.
  *
- * Returns an array that contains the value of each promise (in the same order
- * the promises were provided). If any of the promises are rejected with
- * RejectedPromiseException the target is returned, otherwise the 
- * Exception is returned.
- * 
- * The only case an Exception is returned is if you customized the promised and
- * opted to not return RejectedPromiseException, or if you are using promises 
- * from other libraries.
+ * The returned array will be in the same order the promises were provided. 
+ *
+ * In case of rejection, you can gain access to the target object with the
+ * getTarget method of RejectedPromiseException, so you can retry or handle
+ * the exception.
  *
  * @param mixed $promises Iterable of PromiseInterface objects to wait on.
  *
@@ -69,9 +67,6 @@ function resolve($promises)
         try {
             $results[$key] = $promise->wait();
 
-        } catch (RejectedPromiseException $e) {
-            $results[$key] = $e->getTarget();
-
         } catch (\Exception $e) {
             $results[$key] = $e;
         }
@@ -79,6 +74,19 @@ function resolve($promises)
 
     return $results;
 }
+
+// resolve single item
+// try {
+//     // get target object
+//     $item = $promise->wait();
+
+// } catch (RejectedPromiseException $e) {
+//     // get target object
+//     $item = $e->getTarget();
+
+// } catch (\Exception $e) {
+//     // handle exception
+// }
 
 // function pool($promises, $concurrency=25)
 // {
@@ -91,7 +99,7 @@ function resolve($promises)
 //             'fulfilled' => function ($value, $idx) use (&$results) {
 //                 $results[$idx] = $value;
 //             },
-//             'rejected' => function ($reason, $idx) use (&$results) {            
+//             'rejected' => function ($reason, $idx) use (&$results) {
 //                 if ($reason instanceof RejectedPromiseException) {
 //                     $results[$idx] = $reason->getTarget();
 //                 } else {
@@ -106,6 +114,22 @@ function resolve($promises)
 //         return $results;
 //     })
 //     ->wait();
+// }
+
+// test the usage of each_limit_all
+// function each_limit_all(
+//     $iterable,
+//     $concurrency,
+//     callable $onFulfilled = null
+// ) {
+//     return each_limit(
+//         $iterable,
+//         $concurrency,
+//         $onFulfilled,
+//         function ($reason, $idx, PromiseInterface $aggregate) {
+//             $aggregate->reject($reason);
+//         }
+//     );
 // }
 
 /**
@@ -157,7 +181,7 @@ function object_to_array($object)
 /**
  * Return a new array, executing the toArray method of any object found.
  * Will skip null values.
- * 
+ *
  * @param array $array
  * @return array
  */
