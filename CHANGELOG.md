@@ -1,13 +1,13 @@
 # CHANGELOG
 
 ## HEAD
-- Async operations is available on KeyValue, Event and Relationship objects. Collection and other objects will follow as soon as a proper pagination feature is implemented.
+- Async operations are available on KeyValue, Event and Relationship objects! Collection and other objects will follow as soon as a proper pagination feature is implemented.
 - Introduced the getException method on all objets, to read the last operation exception, in case of errors.
-- Our library will not throw runtime errors anymore, please use getException as well as isError, etc, to check for errors. The only case where an error may, optionally, be thrown is with async promises's unwrap, i.e. wait(true).
+- Our library will not throw runtime errors anymore, please use getException as well as isError, etc, to check for errors. Regarding async, the only case where an error may, optionally, be thrown is with async promises's unwrap, i.e. wait(true).
 - Fixed URL encode on requests, for cases an item key has slashes or other special chars.
 - BC: Moved object classes to the upper level, please use andrefelipe\Orchestrate\KeyValue instead of use andrefelipe\Orchestrate\Objects\KeyValue.
 - BC: Renamed our item's getBody method to getBodyArray, to avoid conflict to PSR-7 Responses.
-- BC: Renamed our item's getStatus method to getReasonPhrase, to comply with PSR-7 and be cleared on their responsibility, of returning HTTP reason phrases, even though Orchestrate has custom HTTP error phrases.
+- BC: Renamed our item's getStatus method to getReasonPhrase, to comply with PSR-7 and be clearer on their responsibility, of returning HTTP reason phrases, even though Orchestrate has custom HTTP error phrases.
 - BC: Deprecated the ObjectArray class and its implementation on getValue and extract (JMESPath) methods, to ease compatibility with larger projects.
 
 ## 0.16.1 - 2016-01-05

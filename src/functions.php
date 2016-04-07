@@ -75,19 +75,6 @@ function resolve($promises)
     return $results;
 }
 
-// resolve single item
-// try {
-//     // get target object
-//     $item = $promise->wait();
-
-// } catch (RejectedPromiseException $e) {
-//     // get target object
-//     $item = $e->getTarget();
-
-// } catch (\Exception $e) {
-//     // handle exception
-// }
-
 // function pool($promises, $concurrency=25)
 // {
 //     $results = [];
