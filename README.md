@@ -469,7 +469,8 @@ $application = new Application();
 $application->setHttpClient($client);
 
 // Good to go
-$item = $application->item('key');
+$collection = $application->collection('name');
+$item = $collection->item('key');
 if ($item->get()) {
     ...
 }
