@@ -3,12 +3,12 @@ Orchestrate.io PHP Client
 
 A very user-friendly PHP client for [Orchestrate.io](https://orchestrate.io) DBaaS.
 
-- Choose which approach you prefer, [client-like or object-like](#getting-started).
+- [Sync or Async](#quick-start) requests.
+- [toArray/toJson](#data-access) methods produces the same output format as Orchestrate's export.
+- Orchestrate's [error responses](https://orchestrate.io/docs/apiref#errors) are honored.
 - [Template engine friendly](#template-engine), with [JMESPath](#jmespath) support.
 - Create [Models](#models) by extending our classes, and easily change child classes.
 - [Serialization](#serialization) is supported.
-- [toArray/toJson](#data-access) methods produces the same output format as Orchestrate's export.
-- Orchestrate's [error responses](https://orchestrate.io/docs/apiref#errors) are honored.
 - Adheres to PHP-FIG [PSR-2](http://www.php-fig.org/psr/psr-2/) and [PSR-4](http://www.php-fig.org/psr/psr-4/)
 
 Add helpful features which Orchestrate API doesn't support (yet):
@@ -34,8 +34,6 @@ Requirements:
 
 > We still are at 0.x version, there is a [lot of ideas](https://github.com/andrefelipe/orchestrate-php/blob/master/TODO.md) to look at.
 
-
-##### This README file reflects the current dev-master version.
 
 
 ## Instalation
@@ -65,50 +63,9 @@ require 'vendor/autoload.php';
 
 
 
-## Getting Started
-You can use our library in two distinct ways:
+## Quick Start
 
-### 1- Client
-##### A straightforward API interface to Orchestrate.
-
-```php
-use andrefelipe\Orchestrate\Client;
-
-// provide the parameters, in order: apiKey, host, version
-$client = new Client(
-    'your-api-key',
-    'https://api.aws-eu-west-1.orchestrate.io/',
-    'v0'
-);
-
-$client = new Client();
-// if you don't provide any parameters it will:
-// get the API key from an environment variable 'ORCHESTRATE_API_KEY'
-// use the default host 'https://api.orchestrate.io'
-// and the default API version 'v0'
-
-// check the connection success with Ping (returns boolean)
-if ($client->ping()) {
-    // OK
-}
-
-// use it
-$item = $client->get('collection', 'key'); // returns a KeyValue object
-$item = $client->put('collection', 'key', ['title' => 'My Title']);
-$item = $client->delete('collection', 'key');
-
-// To check the success of an operation use:
-if ($item->isSuccess()) {
-    // OK, API call sucessful
-
-    // more on using the results and responses below
-}
-
-// IMPORTANT: The result of all operations by the Client are 'Objects' (see next).
-```
-
-### 2- Objects (recommended)
-##### Actual Orchestrate objects (Collection, KeyValue, Event, etc), which provide an object API as well as the response status.
+##### Our library is designed to reflect actual Orchestrate's objects (Collection, KeyValue, Event, etc), where each object provides the API, values and response status.
 
 ```php
 use andrefelipe\Orchestrate\Application;
@@ -132,7 +89,7 @@ $item = $collection->item('key');
 
 if ($item->get()) { // API call to get the current key
 
-    // IMPORTANT: The result of all operations in Objects are boolean
+    // IMPORTANT: The result of all synchronous operations in Objects are boolean
 
     // let's add some values
     $item->name = 'Lorem Ipsum';
@@ -146,16 +103,13 @@ if ($item->get()) { // API call to get the current key
        $item->event('log')->post(['some' => 'value']);
     }
 }
-
 ```
-
-**Note**, the Http client is automatically instantiated by the `Application` and `Client` objects, and all objects created by them have the Http client set, ready to make API calls. If you are programatically instantiating objects (i.e. new KeyValue()), use the `setHttpClient(GuzzleHttp\ClientInterface $client)` method to have them able to do API class.
 
 
 
 ## Responses
 
-**Important: Objects holds the results as well as the response status.**
+##### Our objects holds the results as well as the response status.
 
 Example:
 
@@ -163,84 +117,9 @@ Example:
 $item = $collection->item('key'); // returns a KeyValue object
 
 if ($item->get()) {
-
     // ok, request successful
-
-} else {
-    // in case of error, like 404, it would return results like these:
-
-    $response = $item->getResponse());
-    // Psr\Http\Message\ResponseInterface
-
-    echo $item->getReasonPhrase();
-    // The requested items could not be found.
-    // — the Orchestrate Error Description
     
-    echo $item->getStatusCode();
-    // 404
-    // — the HTTP response status code
-
-    echo $item->getException();
-    // GuzzleHttp\Exception\ClientException
-
-    echo $item->getOrchestrateRequestId();
-    // ec96acd0-ac7b-11e4-8cf6-22000a0d84a1
-    // - Orchestrate request id, X-ORCHESTRATE-REQ-ID header
-
-    print_r($item->getBodyArray());
-    // Array
-    // (
-    //     [message] => The requested items could not be found.
-    //     [details] => Array
-    //         (
-    //             [items] => Array
-    //                 (
-    //                     [0] => Array
-    //                         (
-    //                             [collection] => collection
-    //                             [key] => key
-    //                         )
-    //                 )
-    //         )
-    //     [code] => items_not_found
-    // )
-    // — the full body of the response, in this case, the Orchestrate error
-    
-}
-
-```
-
-
-## Data Access
-
-All objects implements PHP's magic [get/setter](http://php.net/manual/en/language.oop5.overloading.php#language.oop5.overloading.members), [ArrayAccess](http://php.net/manual/en/class.arrayaccess.php) and [ArrayIterator](http://php.net/manual/en/class.iteratoraggregate.php), so you can access the results directly, using either Object or Array syntax.
-
-Example:
-
-```php
-// Considering KeyValue with the value of {"title": "My Title"}
-
-$item = $collection->item('key');
-
-if ($item->get()) {
-
-    // Object syntax
-    echo $item->title;
-
-    // Array syntax
-    echo $item['title'];
-    echo $item['another_prop']; // returns null if not set, but never error
-
-    // as intended you can change the Value, then put back to Orchestrate
-    $item->file_url = 'http://myfile.jpg';
-
-    if ($item->put())) {
-        echo $item->getRef(); // cbb48f9464612f20 (the new ref)
-        echo $item->getReasonPhrase();  // OK
-        echo $item->getStatusCode();  // 200
-    }
-
-    // at any time, get the Value out if needed
+    // at any time, get the Value out
     print_r($item->getValue());
     // Array
     // (
@@ -248,7 +127,7 @@ if ($item->get()) {
     //     [file_url] => http://myfile.jpg
     // )
 
-    // toArray() returns an Array of the Orchestrate object
+    // or an Array of the Orchestrate object
     print_r($item->toArray());
     // Array
     // (
@@ -284,15 +163,288 @@ if ($item->get()) {
     //         "file_url": "http://myfile.jpg"
     //     }
     // }
+
+    // or by all means, just access each value directly
+    echo $item->title;
+    echo $item->file_url;
+
+} else {
+    // in case of error, like 404, it would return results like these:
+
+    $e = $item->getException();
+    // GuzzleHttp\Exception\ClientException
+
+    echo $item->getStatusCode();
+    // 404
+    // — the HTTP response status code
+
+    echo $item->getReasonPhrase();
+    // The requested items could not be found.
+    // — the Orchestrate Error Description
+
+    echo $item->getOrchestrateRequestId();
+    // ec96acd0-ac7b-11e4-8cf6-22000a0d84a1
+    // - Orchestrate request id, X-ORCHESTRATE-REQ-ID header
+    
+    $response = $item->getResponse());
+    // Psr\Http\Message\ResponseInterface
+
+    print_r($item->getBodyArray());
+    // Array
+    // (
+    //     [message] => The requested items could not be found.
+    //     [details] => Array
+    //         (
+    //             [items] => Array
+    //                 (
+    //                     [0] => Array
+    //                         (
+    //                             [collection] => collection
+    //                             [key] => key
+    //                         )
+    //                 )
+    //         )
+    //     [code] => items_not_found
+    // )
+    // — the full body of the response, in this case, the Orchestrate error
+    
+}
+
+// All synchronous operations returns boolean regarding the success, but at any time
+// you can still check if the last operation was successful or not with:
+
+if ($item->isSuccess()) {
+    
+} else {
+    $e = $item->getException();
+    echo $item->getStatusCode();
+    echo $item->getReasonPhrase();
+}
+// the negation is also available: $item->isError()
+
+```
+
+
+
+## Async
+
+##### Asynchronous operations are available on KeyValue, Event and Relationship objects. Collection and other objects will follow as soon as a proper pagination feature is implemented.
+
+
+Every API operation has a sibling "Async" method, for example: get/getAsync, put/putAsync, delete/deleteAsync, etc.
+```php
+$item = $collection->item('key');
+
+// for KeyValue, these are all the methods available
+$promise = $item->getAsync();
+$promise = $item->putAsync();
+$promise = $item->putIfAsync();
+$promise = $item->putIfNoneAsync();
+$promise = $item->postAsync();
+$promise = $item->patchAsync();
+$promise = $item->patchIfAsync();
+$promise = $item->patchMergeAsync();
+$promise = $item->patchMergeIfAsync();
+$promise = $item->deleteAsync();
+$promise = $item->deleteIfAsync();
+$promise = $item->purgeAsync();
+```
+
+The promise returned by these methods are provided by the [Guzzle promises library](https://github.com/guzzle/promises). This means that you can chain then() calls off of the promise. What differs in our implementation is that, as the response is stored within the target object itself, when a promise is fulfilled it returns the actual object, and when it is rejected, it return RejectedPromiseException, a subclass of GuzzleHttp\Promise\RejectionException where you can regain access to the target object.
+
+Chaining:
+```php
+use andrefelipe\Orchestrate\Exception\RejectedPromiseException;
+
+$promise = $item->getAsync();
+$promise->then(
+    function (KeyValue $item) {
+        print_r($item->getValue());
+    },
+    function (RejectedPromiseException $e) {
+        echo $e->getMessage();
+        
+        // get target
+        $item = $e->getTarget();
+
+        // maybe retry?
+        $item->get(); 
+    }
+);
+```
+
+Resolving a single promise:
+```php
+use andrefelipe\Orchestrate\Exception\RejectedPromiseException;
+
+// resolve a single promise
+
+$promise = $item->getAsync();
+
+try {
+    // get target object
+    $item = $promise->wait();
+
+} catch (RejectedPromiseException $e) {
+    // all async rejects of our library uses this subclass 
+    // RejectedPromiseException which adds a method to provide target object, 
+    // so you can retry or better handle the exception
+    $item = $e->getTarget();
+
+} catch (\Exception $e) {
+    // handle exception
+    // this exception will only be generated if you customized the async operation
 }
 
 
+// resolve a single promise without unwrap
+
+$promise = $item->getAsync();
+$promise->wait(false);
+print_r($item->toArray());
+
+// for the even lazier
+
+$promise = $item->getAsync();
+print_r($item->toArray());
+
+// Each object can make several API operations, therefore, before reading data or 
+// issuing any new request, it will try to settle any outstanding promise.
+// So by reading any property like $item->my_prop it will automatically resolve 
+// the internal reference to the last promise created.
+```
+
+
+
+Resolve several async promises concurrently:
+```php
+$promises = [
+    'key' => $collection->item('key')->getAsync(),
+    'foo' => $collection->item('foo')->getAsync(),
+    'bar' => $collection->item('bar')->getAsync(),
+    'unexistent' => $collection->item('unexistent')->getAsync(),
+];
+
+// at this point you can resolve using the best way for your use case, so please
+// take a look at https://github.com/guzzle/promises/blob/master/src/functions.php
+
+// anyway, we do provide an additional helper function, called 'resolve'
+// which waits on all of the provided promises and returns the results,
+// in the same order the promises were provided
+
+use andrefelipe\Orchestrate;
+
+$results = Orchestrate\resolve($promises);
+
+print_r($results);
+Array
+(
+    [key] => KeyValue
+    [foo] => KeyValue
+    [bar] => KeyValue
+    [unexistent] => RejectedPromiseException
+)
+
+foreach ($results as $key => $item) {
+    if ($item instanceof RejectedPromiseException) {
+        continue;
+    }
+    ...
+}
+```
+
+
+
+
+
+## Client / Factory
+##### An object factory is provided, which you can choose for one-step operations.
+
+```php
+use andrefelipe\Orchestrate\Client;
+
+// provide the parameters, in order: apiKey, host, version
+$client = new Client(
+    'your-api-key',
+    'https://api.aws-eu-west-1.orchestrate.io/',
+    'v0'
+);
+
+$client = new Client();
+// if you don't provide any parameters it will:
+// get the API key from an environment variable 'ORCHESTRATE_API_KEY'
+// use the default host 'https://api.orchestrate.io'
+// and the default API version 'v0'
+
+// check the connection success with Ping (returns boolean)
+if ($client->ping()) {
+    // OK
+}
+
+// use it
+$item = $client->get('collection', 'key'); // returns a KeyValue object
+$item = $client->put('collection', 'key', ['title' => 'My Title']);
+$item = $client->delete('collection', 'key');
+
+// To check the success of an operation use:
+if ($item->isSuccess()) {
+    // OK, API call sucessful
+
+    // more on using the results and responses below
+}
+
+// IMPORTANT: The result of all operations by the Client are 'Objects' (see above).
+
+// Async operations are not yet provided until the next version of our library, 
+// which I'll upgrade the Collection classes with proper pagination and async operations.
+
+// The documentation below reflects only the Object usage, for the full list of 
+// available methods, please refer to the source code.
+```
+
+
+**Note**, the Http client is automatically instantiated by the `Application` and `Client` objects, and all objects created by them have the Http client set, ready to make API calls. If you are programatically instantiating objects (i.e. new KeyValue()), use the `setHttpClient(GuzzleHttp\ClientInterface $client)` method to have them able to do API class.
+
+
+
+
+
+
+## Data Access
+
+All objects implements PHP's magic [get/setter](http://php.net/manual/en/language.oop5.overloading.php#language.oop5.overloading.members), [ArrayAccess](http://php.net/manual/en/class.arrayaccess.php) and [ArrayIterator](http://php.net/manual/en/class.iteratoraggregate.php), so you can access the results directly, using either Object or Array syntax.
+
+Example:
+
+```php
+// Considering KeyValue with the value of {"title": "My Title"}
+
+$item = $collection->item('key');
+
+if ($item->get()) {
+
+    // Object syntax
+    echo $item->title;
+
+    // Array syntax
+    echo $item['title'];
+    echo $item['another_prop']; // returns null if not set, but never error
+
+    // as intended you can change the Value, then put back to Orchestrate
+    $item->file_url = 'http://myfile.jpg';
+
+    if ($item->put())) {
+        echo $item->getRef(); // cbb48f9464612f20 (the new ref)
+        echo $item->getReasonPhrase();  // OK
+        echo $item->getStatusCode();  // 200
+    }
+}
 
 // it also gets interesting on a collection of items
 
 if ($collection->search('collection', 'title:"The Title*"')) {
 
-    // where you can iterate over the results directly!
+    // where you can iterate over the results directly
     foreach ($collection as $item) {
         echo $item->title;
     }
@@ -593,6 +745,85 @@ $collection = (new Collection())->init(json_decode($data, true));
 
 
 
+## Cache Middleware
+
+You can and should definitly consider a cache for the HTTP requests. That can be achieved with a Guzzle Cache Middleware.
+
+This is a fine [helper library by Kevinrob](https://github.com/Kevinrob/guzzle-cache-middleware) that will get you running quickly.
+
+And here is a basic sample code using Memcached:
+```php
+// composer require kevinrob/guzzle-cache-middleware
+// composer require doctrine/cache
+
+use andrefelipe\Orchestrate;
+use andrefelipe\Orchestrate\Application;
+
+use Doctrine\Common\Cache\MemcachedCache;
+use Kevinrob\GuzzleCache\Strategy\GreedyCacheStrategy;
+use Kevinrob\GuzzleCache\Storage\DoctrineCacheStorage;
+use GuzzleHttp\Client;
+use GuzzleHttp\HandlerStack;
+use Kevinrob\GuzzleCache\CacheMiddleware;
+
+// Create default HandlerStack
+$stack = HandlerStack::create();
+
+// Create memcached instance
+$memcached = new \Memcached();
+$memcached->addServer(
+    '127.0.0.1',
+    11211
+);
+$cache = new MemcachedCache();
+$cache->setMemcached($memcached);
+
+// Add this middleware to the top with `push`
+$stack->push(
+    new CacheMiddleware(
+        new GreedyCacheStrategy(
+            new DoctrineCacheStorage(
+                $cache
+            )
+        , 48 * 60 * 60) // 48 hours
+    ), 
+    'cache'
+);
+
+// OK, the stack is ready, now let's insert into our library
+
+// Use our helper function to get the base config array
+$config = Orchestrate\default_http_config($apiKey);
+
+// Add the handler stack
+$config['handler'] = $stack;
+
+// Initialize the Guzzle client
+$client = new Client($config);
+
+// Add the custom HTTP client to any object
+// In this case, let's add to an Application so every instance created with it 
+// will inherit the same HTTP client
+$application = new Application();
+$application->setHttpClient($client);
+
+// Good to go
+$item = $application->item('key');
+if ($item->get()) {
+    ...
+}
+```
+
+
+
+
+
+
+
+
+
+
+
 
 # Orchestrate API
 
@@ -600,19 +831,10 @@ $collection = (new Collection())->init(json_decode($data, true));
 ### Application Ping:
 
 ```php
-// Approach 1 - Client
-if ($client->ping()) {
-    // success
-}
-
-// Approach 2 - Object
 if ($application->ping()) {
     // success
 }
-
 ```
-
-
 
 
 
@@ -642,12 +864,6 @@ echo $application->getTotalRelationships('type');
 ### Collection Delete:
 
 ```php
-// Approach 1 - Client
-if ($client->deleteCollection('collection')) {
-    // success
-}
-
-// Approach 2 - Object
 // To prevent accidental deletions, provide the current collection name as
 // the parameter. The collection will only be deleted if both names match.
 if ($collection->delete('collection')) {
@@ -662,15 +878,6 @@ if ($collection->delete('collection')) {
 ### Key/Value Get
 
 ```php
-// Approach 1 - Client
-$item = $client->get('collection', 'key'); // returns KeyValue object
-
-// check operation success with:
-if ($item->isSuccess()) {
-    // ok, request was successful
-}
-
-// Approach 2 - Object
 $item = $collection->item('key');
 
 // you can check operation success direcly
@@ -692,15 +899,16 @@ $item->getBodyArray(); // Array of the unfiltered HTTP response body
 ### Key/Value Put (create/update by key)
 
 ```php
-// Approach 1 - Client
-$item = $client->put('collection', 'key', ['title' => 'New Title']);
-
-// Approach 2 - Object
 $item = $collection->item('key'); // no API calls yet
 $item->put(['title' => 'New Title']); // puts a new value
 // or manage the value then put later
 $item->title = 'New Title';
 $item->put();
+
+// at any time check what will actually be put to Orchestrate with
+print_r($item->getValue());
+// or, for the full Orchestrate object
+print_r($item->toArray());
 ```
 
 
@@ -709,10 +917,6 @@ $item->put();
 Stores the value for the key only if the value of the ref matches the current stored ref.
 
 ```php
-// Approach 1 - Client
-$item = $client->put('collection', 'key', ['title' => 'New Title'], '20c14e8965d6cbb0');
-
-// Approach 2 - Object
 $item = $collection->item('key');
 $item->putIf('20c14e8965d6cbb0', ['title' => 'New Title']);
 $item->putIf(true, ['title' => 'New Title']); // uses the current object Ref, if set
@@ -729,10 +933,6 @@ $item->putIf(); // will be saved only if the current ref is the same
 Stores the value for the key if no key/value already exists.
 
 ```php
-// Approach 1 - Client
-$item = $client->put('collection', 'key', ['title' => 'New Title'], false);
-
-// Approach 2 - Object
 $item = $collection->item('key');
 $item->putIfNone(['title' => 'New Title']);
 
@@ -754,10 +954,6 @@ $patch = (new PatchBuilder())
     ->add('birth_place.city', 'New York')
     ->copy('full_name', 'name');
 
-// Approach 1 - Client
-$item = $client->patch('collection', 'key', $patch);
-
-// Approach 2 - Object 
 $item = $collection->item('key');
 $item->patch($patch);
 
@@ -781,10 +977,6 @@ $patch = (new PatchBuilder())
     ->add('birth_place.city', 'New York')
     ->copy('full_name', 'name');
 
-// Approach 1 - Client
-$item = $client->patch('collection', 'key', $patch, '20c14e8965d6cbb0');
-
-// Approach 2 - Object
 $item = $collection->item('key');
 $item->patchIf('20c14e8965d6cbb0', $patch);
 $item->patchIf(true, $patch); // uses the current object Ref
@@ -797,10 +989,6 @@ $item->patchIf(true, $patch, true); // with the reload as mentioned above
 ### Key/Value Patch (partial update - Merge)
 
 ```php
-// Approach 1 - Client
-$item = $client->patchMerge('collection', 'key', ['title' => 'New Title']);
-
-// Approach 2 - Object
 $item = $collection->item('key');
 $item->title = 'New Title';
 $item->patchMerge(); // merges the current Value
@@ -814,10 +1002,6 @@ $item->patchMerge(['title' => 'New Title']); // or merge with new value
 Stores the value for the key only if the value of the ref matches the current stored ref.
 
 ```php
-// Approach 1 - Client
-$item = $client->patchMerge('collection', 'key', ['title' => 'New Title'], '20c14e8965d6cbb0');
-
-// Approach 2 - Object
 $item = $collection->item('key');
 $item->patchMergeIf('20c14e8965d6cbb0', ['title' => 'New Title']);
 $item->patchMergeIf(true, ['title' => 'New Title']); // uses the current object Ref
@@ -829,10 +1013,6 @@ $item->patchMergeIf(true, ['title' => 'New Title']); // uses the current object 
 ### Key/Value Post (create & generate key)
 
 ```php
-// Approach 1 - Client
-$item = $client->post('collection', ['title' => 'New Title']);
-
-// Approach 2 - Object
 $item = $collection->item();
 $item->post(['title' => 'New Title']); // posts a new value
 // or manage the object values then post later
@@ -844,10 +1024,6 @@ $item->post();
 ### Key/Value Delete
 
 ```php
-// Approach 1 - Client
-$item = $client->delete('collection', 'key');
-
-// Approach 2 - Object
 $item = $collection->item('key');
 $item->delete();
 $item->delete('20c14e8965d6cbb0'); // delete a specific ref
@@ -859,10 +1035,6 @@ $item->delete('20c14e8965d6cbb0'); // delete a specific ref
 The If-Match header specifies that the delete operation will succeed if and only if the ref value matches current stored ref.
 
 ```php
-// Approach 1 - Client
-$item = $client->delete('collection', 'key', '20c14e8965d6cbb0');
-
-// Approach 2 - Object
 $item = $collection->item('key');
 // first get the item, or set a ref:
 // $item->get();
@@ -877,10 +1049,6 @@ $item->deleteIf('20c14e8965d6cbb0'); // delete a specific ref
 The KV object and all of its ref history will be permanently deleted. This operation cannot be undone.
 
 ```php
-// Approach 1 - Client
-$item = $client->purge('collection', 'key');
-
-// Approach 2 - Object
 $item = $collection->item('key');
 $item->purge();
 ```
@@ -909,10 +1077,6 @@ $range->between('blue', 'zinc');
 $range->from($item)->to($anotherItem);
 
 
-// Approach 1 - Client
-$collection = $client->listCollection('collection', 100, $range);
-
-// Approach 2 - Object
 $collection->get(100, $range);
 
 // Please note, the max limit currently imposed by Orchestrate is 100
@@ -944,10 +1108,6 @@ $collection->prevPage(); // loads previous set of results
 Returns the specified version of a value.
 
 ```php
-// Approach 1 - Client
-$item = $client->get('collection', 'key', '20c14e8965d6cbb0');
-
-// Approach 2 - Object
 $item = $collection->item('key');
 $item->get('20c14e8965d6cbb0');
 ```
@@ -957,10 +1117,6 @@ $item->get('20c14e8965d6cbb0');
 Get the specified version of a value.
 
 ```php
-// Approach 1 - Client
-$refs = $client->listRefs('collection', 'key');
-
-// Approach 2 - Object
 $refs = $collection->refs('key');
 // or $refs = $item->refs();
 $refs->get(100);
@@ -990,10 +1146,6 @@ $refs->prevPage(); // loads previous set of results
 ### Root Search:
 
 ```php
-// Approach 1 - Client
-$application = $client->rootSearch('@path.kind:* AND title:"The Title*"');
-
-// Approach 2 - Object
 $application->search('@path.kind:* AND title:"The Title*"');
 
 
@@ -1047,10 +1199,6 @@ $application->search('@path.kind:(item event relationship) AND title:"The Title*
 ### Search:
 
 ```php
-// Approach 1 - Client
-$collection = $client->search('collection', 'title:"The Title*"');
-
-// Approach 2 - Object
 $collection->search('title:"The Title*"');
 
 
@@ -1101,10 +1249,6 @@ $collection->search('@path.kind:(item event) AND title:"The Title*"');
 ### Event Get
 
 ```php
-// Approach 1 - Client
-$event = $client->getEvent('collection', 'key', 'type', 1400684480732, 1);
-
-// Approach 2 - Object
 $item = $collection->item('key');
 $event = $item->event('type', 1400684480732, 1);
 $event->get();
@@ -1113,10 +1257,6 @@ $event->get();
 ### Event Put (update)
 
 ```php
-// Approach 1 - Client
-$event = $client->putEvent('collection', 'key', 'type', 1400684480732, 1, ['title' => 'New Title']);
-
-// Approach 2 - Object
 $item = $collection->item('key');
 $event = $item->event('type', 1400684480732, 1);
 $event->put(['title' => 'New Title']); // puts a new value
@@ -1131,10 +1271,6 @@ $event->put();
 Stores the value for the key only if the value of the ref matches the current stored ref.
 
 ```php
-// Approach 1 - Client
-$event = $client->putEvent('collection', 'key', 'type', 1400684480732, 1, ['title' => 'New Title'], '20c14e8965d6cbb0');
-
-// Approach 2 - Object
 $item = $collection->item('key');
 $event = $item->event('type', 1400684480732, 1);
 $event->putIf('20c14e8965d6cbb0', ['title' => 'New Title']);
@@ -1145,10 +1281,6 @@ $event->putIf(true, ['title' => 'New Title']); // uses the current object Ref, i
 ### Event Post (create)
 
 ```php
-// Approach 1 - Client
-$event = $client->postEvent('collection', 'key', 'type', ['title' => 'New Title']);
-
-// Approach 2 - Object
 $item = $collection->item('key');
 $event = $item->event('type');
 
@@ -1171,10 +1303,6 @@ $event->post(['title' => 'New Title'], true); // use stored timestamp
 Warning: Orchestrate do not support full history of each event, so the delete operation have the purge=true parameter.
 
 ```php
-// Approach 1 - Client
-$event = $client->deleteEvent('collection', 'key', 'type', 1400684480732, 1);
-
-// Approach 2 - Object
 $item = $collection->item('key');
 $event = $item->event('type', 1400684480732, 1);
 $event->delete();
@@ -1186,10 +1314,6 @@ $event->delete();
 The If-Match header specifies that the delete operation will succeed if and only if the ref value matches current stored ref.
 
 ```php
-// Approach 1 - Client
-$event = $client->deleteEvent('collection', 'key', 'type', 1400684480732, 1, '20c14e8965d6cbb0');
-
-// Approach 2 - Object
 $item = $collection->item('key');
 $event = $item->event('type', 1400684480732, 1);
 $event->deleteIf(true); // delete the current ref
@@ -1230,10 +1354,6 @@ $range->betweenDate('2015-03-09', '2015-03-11');
 $range->from($event)->to($anotherEvent);
 
 
-// Approach 1 - Client
-$events = $client->listEvents('collection', 'key', 'type', 10, $range);
-
-// Approach 2 - Object
 // from Collection
 $events = $collection->events('key', 'type');
 // from KeyValue
@@ -1267,11 +1387,6 @@ $events->prevPage(); // loads previous set of results
 ### Event Search:
 
 ```php
-// Approach 1 - Client
-$collection = $client->search('collection', '@path.kind:event AND title:"The Title*"');
-
-
-// Approach 2 - Object
 $events = $collection->events();
 $events->search('title:"The Title*"');
 
@@ -1337,10 +1452,6 @@ $events->search(
 Returns relation's collection, key, ref, and values. The "kind" parameter(s) indicate which relations to walk and the depth to walk.
 
 ```php
-// Approach 1 - Client
-$relations = $client->listRelationships('collection', 'key', 'kind');
-
-// Approach 2 - Object
 $item = $collection->item('key');
 $relations = $item->relationships('kind');
 $relations->get(100);
@@ -1373,10 +1484,6 @@ $relations->prevPage(); // loads previous set of results
 ### Graph Put
 
 ```php
-// Approach 1 - Client
-$item = $client->putRelationship('collection', 'key', 'kind', 'toCollection', 'toKey');
-
-// Approach 2 - Object
 $item = $collection->item('key');
 $anotherItem = $collection->item('another-key');
 
@@ -1412,10 +1519,6 @@ if ($relation->putBoth()) {
 ```php
 $values = ['title' => 'My Title'];
 
-// Approach 1 - Client
-$item = $client->putRelationship('collection', 'key', 'kind', 'toCollection', 'toKey', $values);
-
-// Approach 2 - Object (recommended)
 $item = $collection->item('key');
 $anotherItem = $collection->item('another-key');
 
@@ -1437,10 +1540,6 @@ if ($relation->putBoth($values)) {
 Deletes a relationship between two objects. Relations don't have a history, so the operation have the purge=true parameter.
 
 ```php
-// Approach 1 - Client
-$item = $client->deleteRelationship('collection', 'key', 'kind', 'toCollection', 'toKey');
-
-// Approach 2 - Object
 $item = $collection->item('key');
 $anotherItem = $collection->item('another-key');
 
