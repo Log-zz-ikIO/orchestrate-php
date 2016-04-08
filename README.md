@@ -1024,7 +1024,6 @@ $item->post();
 ```php
 $item = $collection->item('key');
 $item->delete();
-$item->delete('20c14e8965d6cbb0'); // delete a specific ref
 ```
 
 
