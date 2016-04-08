@@ -49,7 +49,7 @@ function default_http_config($apiKey = null, $host = null, $version = null)
  * Waits on all of the provided promises and returns the results, either the
  * target object on success, or RejectedPromiseException on rejection.
  *
- * The returned array will be in the same order the promises were provided. 
+ * The returned array will be in the same order the promises were provided.
  *
  * In case of rejection, you can gain access to the target object with the
  * getTarget method of RejectedPromiseException, so you can retry or handle

@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## HEAD
+## 0.17.0 - 2016-04-07
 - Async operations are available on KeyValue, Event and Relationship objects! Collection and other objects will follow as soon as a proper pagination feature is implemented.
 - Introduced the getException method on all objets, to read the last operation exception, in case of errors.
 - Our library will not throw runtime errors anymore, please use getException as well as isError, etc, to check for errors. Regarding async, the only case where an error may, optionally, be thrown is with async promises's unwrap, i.e. wait(true).

@@ -1,4 +1,4 @@
-# TODO and IDEAS   
+# TODO and IDEAS
 
 - Rethink the responsibility of Collections, as a pagination is implemented. It would not store results within itself anymore, and would evolve into a more responsible factory. Other list classes would merge in as well. 
 

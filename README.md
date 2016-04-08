@@ -252,7 +252,7 @@ $promise = $item->purgeAsync();
 
 The promise returned by these methods are provided by the [Guzzle promises library](https://github.com/guzzle/promises). This means that you can chain then() calls off of the promise. What differs in our implementation is that, as the response is stored within the target object itself, when a promise is fulfilled it returns the actual object, and when it is rejected, it return RejectedPromiseException, a subclass of GuzzleHttp\Promise\RejectionException where you can regain access to the target object.
 
-Chaining:
+##### Chaining:
 ```php
 use andrefelipe\Orchestrate\Exception\RejectedPromiseException;
 
@@ -273,12 +273,11 @@ $promise->then(
 );
 ```
 
-Resolving a single promise:
+##### Resolving a single promise:
 ```php
 use andrefelipe\Orchestrate\Exception\RejectedPromiseException;
 
-// resolve a single promise
-
+// resolve a single promise with unwrap
 $promise = $item->getAsync();
 
 try {
@@ -298,13 +297,11 @@ try {
 
 
 // resolve a single promise without unwrap
-
 $promise = $item->getAsync();
 $promise->wait(false);
 print_r($item->toArray());
 
 // for the even lazier
-
 $promise = $item->getAsync();
 print_r($item->toArray());
 
@@ -316,7 +313,7 @@ print_r($item->toArray());
 
 
 
-Resolve several async promises concurrently:
+##### Resolve several async promises concurrently:
 ```php
 $promises = [
     'key' => $collection->item('key')->getAsync(),
@@ -325,12 +322,12 @@ $promises = [
     'unexistent' => $collection->item('unexistent')->getAsync(),
 ];
 
-// at this point you can resolve using the best way for your use case, so please
+// At this point you can resolve using the best way for your use case, so please
 // take a look at https://github.com/guzzle/promises/blob/master/src/functions.php
 
-// anyway, we do provide an additional helper function, called 'resolve'
+// Anyway, we do provide an additional helper function, called 'resolve'
 // which waits on all of the provided promises and returns the results,
-// in the same order the promises were provided
+// in the same order the promises were provided.
 
 use andrefelipe\Orchestrate;
 
@@ -405,6 +402,78 @@ if ($item->isSuccess()) {
 
 **Note**, the Http client is automatically instantiated by the `Application` and `Client` objects, and all objects created by them have the Http client set, ready to make API calls. If you are programatically instantiating objects (i.e. new KeyValue()), use the `setHttpClient(GuzzleHttp\ClientInterface $client)` method to have them able to do API class.
 
+
+
+
+
+## Cache Middleware
+
+You can and should definitly consider a cache for the HTTP requests. That can be achieved with a Guzzle Cache Middleware.
+
+This is a fine [helper library by Kevinrob](https://github.com/Kevinrob/guzzle-cache-middleware) that will get you running quickly.
+
+And here is a basic sample code using Memcached:
+```php
+// composer require kevinrob/guzzle-cache-middleware
+// composer require doctrine/cache
+
+use andrefelipe\Orchestrate;
+use andrefelipe\Orchestrate\Application;
+
+use Doctrine\Common\Cache\MemcachedCache;
+use Kevinrob\GuzzleCache\Strategy\GreedyCacheStrategy;
+use Kevinrob\GuzzleCache\Storage\DoctrineCacheStorage;
+use GuzzleHttp\Client;
+use GuzzleHttp\HandlerStack;
+use Kevinrob\GuzzleCache\CacheMiddleware;
+
+// Create default HandlerStack
+$stack = HandlerStack::create();
+
+// Create memcached instance
+$memcached = new \Memcached();
+$memcached->addServer(
+    '127.0.0.1',
+    11211
+);
+$cache = new MemcachedCache();
+$cache->setMemcached($memcached);
+
+// Add this middleware to the top with `push`
+$stack->push(
+    new CacheMiddleware(
+        new GreedyCacheStrategy(
+            new DoctrineCacheStorage(
+                $cache
+            )
+        , 48 * 60 * 60) // 48 hours
+    ), 
+    'cache'
+);
+
+// OK, the stack is ready, now let's insert into our library
+
+// Use our helper function to get the base config array
+$config = Orchestrate\default_http_config($apiKey);
+
+// Add the handler stack
+$config['handler'] = $stack;
+
+// Initialize the Guzzle client
+$client = new Client($config);
+
+// Add the custom HTTP client to any object
+// In this case, let's add to an Application so every instance created with it 
+// will inherit the same HTTP client
+$application = new Application();
+$application->setHttpClient($client);
+
+// Good to go
+$item = $application->item('key');
+if ($item->get()) {
+    ...
+}
+```
 
 
 
@@ -741,78 +810,6 @@ $collection = (new Collection())->init(json_decode($data, true));
 
 ```
 
-
-
-
-
-## Cache Middleware
-
-You can and should definitly consider a cache for the HTTP requests. That can be achieved with a Guzzle Cache Middleware.
-
-This is a fine [helper library by Kevinrob](https://github.com/Kevinrob/guzzle-cache-middleware) that will get you running quickly.
-
-And here is a basic sample code using Memcached:
-```php
-// composer require kevinrob/guzzle-cache-middleware
-// composer require doctrine/cache
-
-use andrefelipe\Orchestrate;
-use andrefelipe\Orchestrate\Application;
-
-use Doctrine\Common\Cache\MemcachedCache;
-use Kevinrob\GuzzleCache\Strategy\GreedyCacheStrategy;
-use Kevinrob\GuzzleCache\Storage\DoctrineCacheStorage;
-use GuzzleHttp\Client;
-use GuzzleHttp\HandlerStack;
-use Kevinrob\GuzzleCache\CacheMiddleware;
-
-// Create default HandlerStack
-$stack = HandlerStack::create();
-
-// Create memcached instance
-$memcached = new \Memcached();
-$memcached->addServer(
-    '127.0.0.1',
-    11211
-);
-$cache = new MemcachedCache();
-$cache->setMemcached($memcached);
-
-// Add this middleware to the top with `push`
-$stack->push(
-    new CacheMiddleware(
-        new GreedyCacheStrategy(
-            new DoctrineCacheStorage(
-                $cache
-            )
-        , 48 * 60 * 60) // 48 hours
-    ), 
-    'cache'
-);
-
-// OK, the stack is ready, now let's insert into our library
-
-// Use our helper function to get the base config array
-$config = Orchestrate\default_http_config($apiKey);
-
-// Add the handler stack
-$config['handler'] = $stack;
-
-// Initialize the Guzzle client
-$client = new Client($config);
-
-// Add the custom HTTP client to any object
-// In this case, let's add to an Application so every instance created with it 
-// will inherit the same HTTP client
-$application = new Application();
-$application->setHttpClient($client);
-
-// Good to go
-$item = $application->item('key');
-if ($item->get()) {
-    ...
-}
-```
 
 
 
