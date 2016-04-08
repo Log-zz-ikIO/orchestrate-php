@@ -961,8 +961,8 @@ $item->patch($patch);
 // and an extra GET would have to issued anyway.
 
 // As a solution, you can fetch the resulting Value, using the
-// third parameter 'reload' as:
-$item->patch($patch, null, true);
+// second parameter 'reload' as:
+$item->patch($patch, true);
 // it will reload the data if the patch was successful
 ```
 
