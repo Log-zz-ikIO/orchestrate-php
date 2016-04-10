@@ -28,13 +28,14 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     public function isTombstone()
     {
+        $this->settlePromise();
+        
         return $this->_tombstone;
     }
 
     public function reset()
     {
         parent::reset();
-        $this->_collection = null;
         $this->_key = null;
         $this->_tombstone = false;
     }
@@ -86,6 +87,15 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     public function getAsync($ref = null)
     {
+        // clear search properties and tombstone
+        $this->_score = null;
+        $this->_distance = null;                
+        $this->_tombstone = false;
+
+        // the local value is no longer considered up to date
+        // if the get request is unsucessful the value must be empty
+        $this->resetValue(); 
+
         return $this->requestAsync(
             // method
             'GET',
@@ -151,6 +161,11 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     private function _putAsync(array $value = null, $ref = null)
     {
+        // clear search properties and tombstone
+        $this->_score = null;
+        $this->_distance = null;
+        $this->_tombstone = false;
+
         return $this->requestAsync(
             // method
             'PUT',
@@ -196,6 +211,14 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     public function postAsync(array $value = null)
     {
+        // clear all properties beforehand, except the value
+        $this->_key = null;
+        $this->_ref = null;
+        $this->_reftime = null;
+        $this->_score = null;
+        $this->_distance = null;                
+        $this->_tombstone = false;
+
         return $this->requestAsync(
             // method
             'POST',
@@ -254,6 +277,15 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     private function _patchAsync(PatchBuilder $operations, $ref = null, $reload = false)
     {
+        // clear some properties beforehand
+        $this->_score = null;
+        $this->_distance = null;                
+        $this->_tombstone = false;
+
+        // the local value is no longer reliable with patch
+        // if the result value is wanted, we need to reload
+        $this->resetValue(); 
+
         return $this->requestAsync(
             // method
             'PATCH',
@@ -318,6 +350,15 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     private function _patchMergeAsync(array $value, $ref = null, $reload = false)
     {
+        // clear some properties beforehand
+        $this->_score = null;
+        $this->_distance = null;                
+        $this->_tombstone = false;
+
+        // the local value is no longer reliable with patch merge
+        // if the result value is wanted, we need to reload
+        $this->resetValue(); 
+
         return $this->requestAsync(
             // method
             'PATCH',
@@ -381,6 +422,12 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     private function _deleteAsync($ref = null)
     {
+        // clear all properties beforehand, except the key and ref
+        $this->_score = null;
+        $this->_distance = null;                
+        $this->_tombstone = false;
+        $this->resetValue();
+
         return $this->requestAsync(
             // method
             'DELETE',
@@ -403,13 +450,8 @@ class KeyValue extends AbstractItem implements KeyValueInterface
                 return $options;
             },
             // onFulfilled
-            static function ($self) {
-                $self->_score = null;
-                $self->_distance = null;
-                $self->_reftime = null;
+            static function ($self) {             
                 $self->_tombstone = true;
-                $self->resetValue();
-
                 return $self;
             }
         );
@@ -424,6 +466,9 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     public function purgeAsync()
     {
+        // clear all properties beforehand
+        $this->reset();
+
         return $this->requestAsync(
             // method
             'DELETE',
@@ -439,18 +484,6 @@ class KeyValue extends AbstractItem implements KeyValueInterface
             static function ($self) {
                 $options = ['query' => ['purge' => 'true']];
                 return $options;
-            },
-            // onFulfilled
-            static function ($self) {
-                $self->_key = null;
-                $self->_ref = null;
-                $self->_score = null;
-                $self->_distance = null;
-                $self->_reftime = null;
-                $self->_tombstone = false;
-                $self->resetValue();
-
-                return $self;
             }
         );
     }
