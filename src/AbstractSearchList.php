@@ -11,7 +11,7 @@ abstract class AbstractSearchList extends AbstractList
     public function reset()
     {
         parent::reset();
-        $this->_aggregates = null;
+        $this->_aggregates = [];
     }
 
     public function init(array $data)
@@ -50,7 +50,7 @@ abstract class AbstractSearchList extends AbstractList
             if (!empty($body['aggregates'])) {
                 $this->_aggregates = $body['aggregates'];
             } else {
-                $this->_aggregates = null;
+                $this->_aggregates = [];
             }
         }
     }

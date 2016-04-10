@@ -14,7 +14,7 @@ abstract class AbstractList extends AbstractConnection implements ListInterface
     /**
      * @var array
      */
-    protected $_results = null;
+    protected $_results = [];
 
     /**
      * @var int
@@ -106,11 +106,13 @@ abstract class AbstractList extends AbstractConnection implements ListInterface
         $this->_totalCount = null;
         $this->_nextUrl = '';
         $this->_prevUrl = '';
-        $this->_results = null;
+        $this->_results = [];
     }
 
     public function init(array $data)
     {
+        $this->settlePromise();
+
         if (!empty($data)) {
             foreach ($data as $key => $value) {
 
@@ -136,6 +138,8 @@ abstract class AbstractList extends AbstractConnection implements ListInterface
 
     public function toArray()
     {
+        $this->settlePromise();
+
         $data = [
             'kind' => 'list',
             'count' => count($this),
@@ -178,9 +182,8 @@ abstract class AbstractList extends AbstractConnection implements ListInterface
 
     public function getResults()
     {
-        if (!$this->_results) {
-            $this->_results = [];
-        }
+        $this->settlePromise();
+
         return $this->_results;
     }
 
@@ -220,21 +223,29 @@ abstract class AbstractList extends AbstractConnection implements ListInterface
 
     public function getTotalCount()
     {
+        $this->settlePromise();
+
         return $this->_totalCount;
     }
 
     public function getNextUrl()
     {
+        $this->settlePromise();
+
         return $this->_nextUrl;
     }
 
     public function getPrevUrl()
     {
+        $this->settlePromise();
+
         return $this->_prevUrl;
     }
 
     public function nextPage()
     {
+        $this->settlePromise();
+
         if ($this->_nextUrl) {
             $this->request('GET', $this->_nextUrl);
 
@@ -248,6 +259,8 @@ abstract class AbstractList extends AbstractConnection implements ListInterface
 
     public function prevPage()
     {
+        $this->settlePromise();
+        
         if ($this->_prevUrl) {
             $this->request('GET', $this->_prevUrl);
 
@@ -265,7 +278,7 @@ abstract class AbstractList extends AbstractConnection implements ListInterface
     protected function setResponseValues()
     {
         // reset local properties
-        $this->_results = null;
+        $this->_results = [];
         $this->_nextUrl = '';
         $this->_prevUrl = '';
 

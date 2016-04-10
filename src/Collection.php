@@ -160,31 +160,44 @@ class Collection extends AbstractSearchList implements CollectionInterface
 
     public function search($query, $sort = null, $aggregate = null, $limit = 10, $offset = 0)
     {
-        // define request options
-        $parameters = [
-            'query' => $query,
-            'limit' => $limit,
-        ];
-        if (!empty($sort)) {
-            $parameters['sort'] = implode(',', (array) $sort);
-        }
-        if (!empty($aggregate)) {
-            $parameters['aggregate'] = implode(',', (array) $aggregate);
-        }
-        if ($offset) {
-            $parameters['offset'] = $offset;
-        }
-
-        // request
-        $this->request('GET', $this->getCollection(true), ['query' => $parameters]);
-
-        // teria que resetar os values after all,
-        // estou fazendo um search e quero saber se retornou resultado
-
-        if ($this->isSuccess()) {
-            $this->setResponseValues();
-        }
+        $this->searchAsync($query, $sort, $aggregate, $limit, $offset);
+        $this->settlePromise();
         return $this->isSuccess();
+    }
+
+    public function searchAsync($query, $sort = null, $aggregate = null, $limit = 10, $offset = 0)
+    {
+        return $this->requestAsync(
+            // method
+            'GET',
+            // uri
+            static function ($self) {
+                return [$self->getCollection(true)];
+            },
+            // options
+            static function ($self) use ($query, $sort, $aggregate, $limit, $offset) {
+                // assemble query parameters
+                $parameters = [
+                    'query' => $query,
+                    'limit' => $limit,
+                ];
+                if (!empty($sort)) {
+                    $parameters['sort'] = implode(',', (array) $sort);
+                }
+                if (!empty($aggregate)) {
+                    $parameters['aggregate'] = implode(',', (array) $aggregate);
+                }
+                if ($offset) {
+                    $parameters['offset'] = $offset;
+                }
+                return ['query' => $parameters];
+            },
+            // onFulfilled
+            static function ($self) {
+                $self->setResponseValues();
+                return $self;
+            }
+        );
     }
 
     /**
