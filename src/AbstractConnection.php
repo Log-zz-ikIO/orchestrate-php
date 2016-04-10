@@ -64,6 +64,7 @@ abstract class AbstractConnection implements ConnectionInterface
     {
         if ($this->_promise) {
             $this->_promise->wait(false);
+            $this->_promise = null; // not needed but let's be extra safe
         }
     }
 
@@ -286,7 +287,7 @@ abstract class AbstractConnection implements ConnectionInterface
         try {
             $json = $response->getBody();
             $this->_bodyArray = \GuzzleHttp\json_decode($json, true);
-        } catch (\InvalidArgumentException $e) {            
+        } catch (\InvalidArgumentException $e) {
             $this->setException($e);
         }
     }

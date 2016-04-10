@@ -23,6 +23,8 @@ trait RefTrait
      */
     public function getRef($required = false)
     {
+        $this->settlePromise();
+
         if ($required && !$this->_ref) {
             throw new MissingPropertyException('ref', 'setRef');
         }
@@ -37,6 +39,8 @@ trait RefTrait
      */
     public function setRef($ref)
     {
+        $this->settlePromise();
+
         $this->_ref = (string) $ref;
 
         return $this;

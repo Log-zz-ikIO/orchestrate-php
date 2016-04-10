@@ -25,6 +25,8 @@ trait RelationTrait
      */
     public function getRelation($required = false)
     {
+        $this->settlePromise();
+
         if ($required && !$this->_relation) {
             throw new MissingPropertyException('relation', 'setRelation');
         }
@@ -40,6 +42,8 @@ trait RelationTrait
      */
     public function setRelation($kind)
     {
+        $this->settlePromise();
+
         if (is_array($kind)) {
             throw new \InvalidArgumentException('The "kind" parameter can not be Array. Only one relation can be handled per time.');
         }

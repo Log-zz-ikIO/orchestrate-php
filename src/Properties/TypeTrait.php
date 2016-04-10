@@ -23,6 +23,8 @@ trait TypeTrait
      */
     public function getType($required = false)
     {
+        $this->settlePromise();
+
         if ($required && !$this->_type) {
             throw new MissingPropertyException('type', 'setType');
         }
@@ -37,6 +39,8 @@ trait TypeTrait
      */
     public function setType($type)
     {
+        $this->settlePromise();
+
         $this->_type = (string) $type;
 
         return $this;

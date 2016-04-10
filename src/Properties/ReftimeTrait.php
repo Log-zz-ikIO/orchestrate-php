@@ -18,6 +18,8 @@ trait ReftimeTrait
      */
     public function getReftime()
     {
+        $this->settlePromise();
+
         return $this->_reftime;
     }
 
@@ -28,6 +30,8 @@ trait ReftimeTrait
      */
     private function setReftime($value)
     {
+        $this->settlePromise();
+
         $this->_reftime = (int) $value;
 
         return $this;

@@ -28,6 +28,8 @@ trait OrdinalTrait
      */
     public function getOrdinal($required = false)
     {
+        $this->settlePromise();
+
         if ($required && !$this->_ordinal) {
             throw new MissingPropertyException('ordinal', 'setOrdinal');
         }
@@ -42,6 +44,8 @@ trait OrdinalTrait
      */
     public function setOrdinal($ordinal)
     {
+        $this->settlePromise();
+
         $this->_ordinal = (int) $ordinal;
 
         return $this;
@@ -52,6 +56,8 @@ trait OrdinalTrait
      */
     public function getOrdinalStr()
     {
+        $this->settlePromise();
+
         return $this->_ordinalStr;
     }
 
@@ -62,6 +68,8 @@ trait OrdinalTrait
      */
     private function setOrdinalStr($value)
     {
+        $this->settlePromise();
+
         $this->_ordinalStr = (string) $value;
 
         return $this;

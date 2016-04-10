@@ -18,6 +18,8 @@ trait ScoreTrait
      */
     public function getScore()
     {
+        $this->settlePromise();
+
         return $this->_score;
     }
 
@@ -28,6 +30,8 @@ trait ScoreTrait
      */
     private function setScore($value)
     {
+        $this->settlePromise();
+
         $this->_score = (float) $value;
 
         return $this;

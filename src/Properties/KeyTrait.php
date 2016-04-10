@@ -23,6 +23,8 @@ trait KeyTrait
      */
     public function getKey($required = false)
     {
+        $this->settlePromise();
+
         if ($required && !$this->_key) {
             throw new MissingPropertyException('key', 'setKey');
         }
@@ -37,6 +39,8 @@ trait KeyTrait
      */
     public function setKey($key)
     {
+        $this->settlePromise();
+
         $this->_key = (string) $key;
 
         return $this;

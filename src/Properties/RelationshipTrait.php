@@ -29,6 +29,8 @@ trait RelationshipTrait
      */
     public function getSource($required = false)
     {
+        $this->settlePromise();
+
         if ($required && !$this->_source) {
             throw new MissingPropertyException('source', 'setSource');
         }
@@ -43,6 +45,8 @@ trait RelationshipTrait
      */
     public function setSource(KeyValueInterface $item)
     {
+        $this->settlePromise();
+
         $this->_source = $item;
 
         return $this;
@@ -56,6 +60,8 @@ trait RelationshipTrait
      */
     public function getDestination($required = false)
     {
+        $this->settlePromise();
+
         if ($required && !$this->_destination) {
             throw new MissingPropertyException('destination', 'setDestination');
         }
@@ -70,6 +76,8 @@ trait RelationshipTrait
      */
     public function setDestination(KeyValueInterface $item)
     {
+        $this->settlePromise();
+
         $this->_destination = $item;
 
         return $this;

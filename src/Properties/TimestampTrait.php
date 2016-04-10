@@ -29,6 +29,8 @@ trait TimestampTrait
      */
     public function getTimestamp($required = false)
     {
+        $this->settlePromise();
+
         if ($required && !$this->_timestamp) {
             throw new MissingPropertyException('timestamp', 'setTimestamp');
         }
@@ -49,6 +51,8 @@ trait TimestampTrait
      */
     public function setTimestamp($timestamp)
     {
+        $this->settlePromise();
+
         $this->_timestamp = $timestamp;
 
         return $this;
@@ -67,6 +71,8 @@ trait TimestampTrait
      */
     public function setTimestampDate($date)
     {
+        $this->settlePromise();
+
         if ($date instanceof \DateTime) {
             $seconds = $date->getTimestamp();
 

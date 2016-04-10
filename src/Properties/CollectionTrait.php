@@ -25,6 +25,8 @@ trait CollectionTrait
      */
     public function getCollection($required = false)
     {
+        $this->settlePromise();
+
         if ($required && !$this->_collection) {
             throw new MissingPropertyException('collection', 'setCollection');
         }
@@ -41,6 +43,8 @@ trait CollectionTrait
      */
     public function setCollection($collection)
     {
+        $this->settlePromise();
+        
         $this->_collection = $collection ? (string) $collection : null;
 
         return $this;

@@ -23,6 +23,8 @@ trait DepthTrait
      */
     public function getDepth($required = false)
     {
+        $this->settlePromise();
+
         if ($required && empty($this->_depth)) {
             throw new MissingPropertyException('relation depth', 'setDepth');
         }
@@ -37,6 +39,8 @@ trait DepthTrait
      */
     public function setDepth($kind)
     {
+        $this->settlePromise();
+
         $this->_depth = (array) $kind;
 
         return $this;

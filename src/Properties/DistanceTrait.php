@@ -18,6 +18,8 @@ trait DistanceTrait
      */
     public function getDistance()
     {
+        $this->settlePromise();
+
         return $this->_distance;
     }
 
@@ -28,6 +30,8 @@ trait DistanceTrait
      */
     private function setDistance($value)
     {
+        $this->settlePromise();
+        
         $this->_distance = (float) $value;
 
         return $this;

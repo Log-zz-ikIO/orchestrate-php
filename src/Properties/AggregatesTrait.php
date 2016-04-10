@@ -11,16 +11,15 @@ trait AggregatesTrait
     /**
      * @var array
      */
-    private $_aggregates;
+    private $_aggregates = [];
 
     /**
      * @return array
      */
     public function getAggregates()
     {
-        if (!$this->_aggregates) {
-            $this->_aggregates = [];
-        }
+        $this->settlePromise();
+        
         return $this->_aggregates;
     }
 }
