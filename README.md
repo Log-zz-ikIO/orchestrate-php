@@ -262,13 +262,18 @@ $promise->then(
         print_r($item->getValue());
     },
     function (RejectedPromiseException $e) {
+        // get error message
         echo $e->getMessage();
         
         // get target
         $item = $e->getTarget();
 
-        // maybe retry?
-        $item->get(); 
+        // retry
+        return $item->getAsync()->then(
+            function (KeyValue $item) {
+                print_r($item->getValue());
+            }
+        );
     }
 );
 ```
