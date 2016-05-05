@@ -47,11 +47,7 @@ abstract class AbstractSearchList extends AbstractList
 
         if ($this->isSuccess()) {
             $body = $this->getBodyArray();
-            if (!empty($body['aggregates'])) {
-                $this->_aggregates = $body['aggregates'];
-            } else {
-                $this->_aggregates = [];
-            }
+            $this->_aggregates = !empty($body['aggregates']) ? $body['aggregates'] : [];
         }
     }
 

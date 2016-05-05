@@ -26,7 +26,7 @@ class Collection extends AbstractSearchList implements CollectionInterface
     public function item($key = null, $ref = null)
     {
         return $this->getItemClass()->newInstance()
-            ->setCollection($this->getCollection(true))
+            ->setCollection($this->getCollection())
             ->setKey($key)
             ->setRef($ref)
             ->setHttpClient($this->getHttpClient());
@@ -35,7 +35,7 @@ class Collection extends AbstractSearchList implements CollectionInterface
     public function refs($key = null)
     {
         return (new Refs())
-            ->setCollection($this->getCollection(true))
+            ->setCollection($this->getCollection())
             ->setKey($key)
             ->setHttpClient($this->getHttpClient())
             ->setItemClass($this->getItemClass());
@@ -44,7 +44,7 @@ class Collection extends AbstractSearchList implements CollectionInterface
     public function event($key = null, $type = null, $timestamp = null, $ordinal = null)
     {
         return $this->getEventClass()->newInstance()
-            ->setCollection($this->getCollection(true))
+            ->setCollection($this->getCollection())
             ->setKey($key)
             ->setType($type)
             ->setTimestamp($timestamp)
@@ -55,7 +55,7 @@ class Collection extends AbstractSearchList implements CollectionInterface
     public function events($key = null, $type = null)
     {
         return (new Events())
-            ->setCollection($this->getCollection(true))
+            ->setCollection($this->getCollection())
             ->setKey($key)
             ->setType($type)
             ->setHttpClient($this->getHttpClient());
@@ -63,12 +63,19 @@ class Collection extends AbstractSearchList implements CollectionInterface
 
     public function getTotalItems()
     {
-        return $this->getItemCount($this->getCollection(true), KeyValue::KIND);
+        return $this->getItemCount(
+            $this->getCollection(true),
+            KeyValue::KIND
+        );
     }
 
     public function getTotalEvents($type = null)
     {
-        return $this->getItemCount($this->getCollection(true), Event::KIND, $type);
+        return $this->getItemCount(
+            $this->getCollection(true),
+            Event::KIND,
+            $type
+        );
     }
 
     public function getTotalRelationships($type = null)
@@ -79,12 +86,6 @@ class Collection extends AbstractSearchList implements CollectionInterface
             null,
             $type
         );
-    }
-
-    public function reset()
-    {
-        parent::reset();
-        $this->_collection = null;
     }
 
     public function init(array $data)
@@ -130,28 +131,48 @@ class Collection extends AbstractSearchList implements CollectionInterface
 
     public function get($limit = 10, KeyRangeBuilder $range = null)
     {
-        // define request options
+        $this->getAsync($limit, $range);
+        $this->settlePromise();
+        return $this->isSuccess();
+    }
+
+    public function getAsync($limit = 10, KeyRangeBuilder $range = null)
+    {
+        // clear all previous results beforehand
+        $this->reset();
+
+        // assemble query parameters
         $parameters = $range ? $range->toArray() : [];
         $parameters['limit'] = $limit > 100 ? 100 : $limit;
 
-        // request
-        $this->request('GET', $this->getCollection(true), ['query' => $parameters]);
-
-        if ($this->isSuccess()) {
-            $this->setResponseValues();
-        }
-        return $this->isSuccess();
+        return $this->requestAsync(
+            // method
+            'GET',
+            // uri
+            static function ($self) {
+                return [$self->getCollection(true)];
+            },
+            // options
+            static function ($self) use ($parameters) {
+                return ['query' => $parameters];
+            },
+            // onFulfilled
+            static function ($self) {
+                $self->setResponseValues();
+                return $self;
+            }
+        );
     }
 
     public function delete($collection_name)
     {
+        // clear all previous results beforehand
+        $this->reset();
+
         if ($collection_name === $this->getCollection(true)) {
 
             $this->request('DELETE', $collection_name, ['query' => ['force' => 'true']]);
 
-            if ($this->isSuccess()) {
-                $this->setResponseValues();
-            }
             return $this->getStatusCode() === 204;
         }
 
@@ -167,6 +188,24 @@ class Collection extends AbstractSearchList implements CollectionInterface
 
     public function searchAsync($query, $sort = null, $aggregate = null, $limit = 10, $offset = 0)
     {
+        // clear all previous results beforehand
+        $this->reset();
+
+        // assemble query parameters
+        $parameters = [
+            'query' => $query,
+            'limit' => $limit,
+        ];
+        if (!empty($sort)) {
+            $parameters['sort'] = implode(',', (array) $sort);
+        }
+        if (!empty($aggregate)) {
+            $parameters['aggregate'] = implode(',', (array) $aggregate);
+        }
+        if ($offset) {
+            $parameters['offset'] = $offset;
+        }
+
         return $this->requestAsync(
             // method
             'GET',
@@ -175,21 +214,7 @@ class Collection extends AbstractSearchList implements CollectionInterface
                 return [$self->getCollection(true)];
             },
             // options
-            static function ($self) use ($query, $sort, $aggregate, $limit, $offset) {
-                // assemble query parameters
-                $parameters = [
-                    'query' => $query,
-                    'limit' => $limit,
-                ];
-                if (!empty($sort)) {
-                    $parameters['sort'] = implode(',', (array) $sort);
-                }
-                if (!empty($aggregate)) {
-                    $parameters['aggregate'] = implode(',', (array) $aggregate);
-                }
-                if ($offset) {
-                    $parameters['offset'] = $offset;
-                }
+            static function ($self) use ($parameters) {
                 return ['query' => $parameters];
             },
             // onFulfilled
