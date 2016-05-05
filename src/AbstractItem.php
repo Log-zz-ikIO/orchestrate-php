@@ -153,17 +153,24 @@ abstract class AbstractItem extends AbstractConnection implements ItemInterface
         return $this;
     }
 
+    public function getPath()
+    {
+        $this->settlePromise();
+                
+        return [
+            'kind' => static::KIND,
+            'ref' => $this->_ref,
+            'reftime' => $this->_reftime,
+        ];
+    }
+
     public function toArray()
     {
         $this->settlePromise();
 
         $data = [
             'kind' => static::KIND,
-            'path' => [
-                'kind' => static::KIND,
-                'ref' => $this->_ref,
-                'reftime' => $this->_reftime,
-            ],
+            'path' => $this->getPath(),
             'value' => array_merge($this->getMappedValues(true), object_to_array($this)),
         ];
 

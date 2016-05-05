@@ -64,18 +64,18 @@ class KeyValue extends AbstractItem implements KeyValueInterface
         return $this;
     }
 
-    public function toArray()
+    public function getPath() 
     {
-        $data = parent::toArray();
+        $path = parent::getPath();
 
-        $data['path']['collection'] = $this->_collection;
-        $data['path']['key'] = $this->_key;
+        $path['collection'] = $this->_collection;
+        $path['key'] = $this->_key;
 
         if ($this->_tombstone) {
-            $data['path']['tombstone'] = $this->_tombstone;
+            $path['tombstone'] = $this->_tombstone;
         }
 
-        return $data;
+        return $path;
     }
 
     public function get($ref = null)
@@ -490,22 +490,22 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     public function refs()
     {
-        return (new Refs($this->getCollection(true), $this->getKey(true)))
+        return (new Refs($this->getCollection(), $this->getKey()))
             ->setHttpClient($this->getHttpClient())
             ->setItemClass(new \ReflectionClass($this));
     }
 
     public function events($type = null)
     {
-        return (new Events($this->getCollection(true), $this->getKey(true), $type))
+        return (new Events($this->getCollection(), $this->getKey(), $type))
             ->setHttpClient($this->getHttpClient());
     }
 
     public function event($type = null, $timestamp = null, $ordinal = null)
     {
         return (new Event(
-            $this->getCollection(true),
-            $this->getKey(true),
+            $this->getCollection(),
+            $this->getKey(),
             $type,
             $timestamp,
             $ordinal
@@ -514,7 +514,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
 
     public function relationships($kind)
     {
-        return (new Relationships($this->getCollection(true), $this->getKey(true), $kind))
+        return (new Relationships($this->getCollection(), $this->getKey(), $kind))
             ->setHttpClient($this->getHttpClient());
     }
 

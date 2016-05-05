@@ -44,6 +44,13 @@ interface ItemInterface extends ObjectInterface
     public function getDistance();
 
     /**
+     * Get item Path.
+     *
+     * @return array
+     */
+    public function getPath();
+
+    /**
      * Get item Value.
      *
      * @return array

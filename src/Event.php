@@ -73,18 +73,18 @@ class Event extends AbstractItem implements EventInterface
         return $this;
     }
 
-    public function toArray()
+    public function getPath() 
     {
-        $data = parent::toArray();
+        $path = parent::getPath();
 
-        $data['path']['collection'] = $this->_collection;
-        $data['path']['key'] = $this->_key;
-        $data['path']['type'] = $this->_type;
-        $data['path']['timestamp'] = $this->_timestamp;
-        $data['path']['ordinal'] = $this->_ordinal;
-        $data['path']['ordinal_str'] = $this->_ordinalStr;
+        $path['collection'] = $this->_collection;
+        $path['key'] = $this->_key;
+        $path['type'] = $this->_type;
+        $path['timestamp'] = $this->_timestamp;
+        $path['ordinal'] = $this->_ordinal;
+        $path['ordinal_str'] = $this->_ordinalStr;
 
-        return $data;
+        return $path;
     }
 
     public function get()
