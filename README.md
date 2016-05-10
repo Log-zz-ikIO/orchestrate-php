@@ -7,7 +7,6 @@ A very user-friendly PHP client for [Orchestrate.io](https://orchestrate.io) DBa
 - [toArray/toJson](#data-access) methods produces the same output format as Orchestrate's export.
 - Orchestrate's [error responses](https://orchestrate.io/docs/apiref#errors) are honored.
 - [Template engine friendly](#template-engine), with [JMESPath](#jmespath) support.
-- Create [Models](#models) by extending our classes, and easily change child classes.
 - [Serialization](#serialization) is supported.
 - Adheres to PHP-FIG [PSR-2](http://www.php-fig.org/psr/psr-2/) and [PSR-4](http://www.php-fig.org/psr/psr-4/)
 
@@ -250,7 +249,7 @@ $promise = $item->deleteIfAsync();
 $promise = $item->purgeAsync();
 ```
 
-The promise returned by these methods are provided by the [Guzzle promises library](https://github.com/guzzle/promises). This means that you can chain then() calls off of the promise. What differs in our implementation is that, as the response is stored within the target object itself, when a promise is fulfilled it returns the actual object, and when it is rejected, it return RejectedPromiseException, a subclass of GuzzleHttp\Promise\RejectionException where you can regain access to the target object.
+The promise returned by these methods are provided by the [Guzzle promises library](https://github.com/guzzle/promises). This means that you can chain then() calls off of the promise. What differs in our implementation is that, as the response is stored within the target object itself, when a promise is fulfilled it returns the actual object, and when it is rejected, it returns RejectedPromiseException, a subclass of GuzzleHttp\Promise\RejectionException where you can regain access to the target object.
 
 ##### Chaining:
 ```php
@@ -302,12 +301,13 @@ try {
 
 
 // resolve a single promise without unwrap
+// it won't throw exceptions
 $promise = $item->getAsync();
 $promise->wait(false);
 print_r($item->toArray());
 
 // for the even lazier
-$promise = $item->getAsync();
+$item->getAsync();
 print_r($item->toArray());
 
 // Each object can make several API operations, therefore, before reading data or 
@@ -601,166 +601,6 @@ $result = $item->extractValue('{name: name, thumb: thumbs[0]}');
 ```
 
 
-
-
-
-## Models / ODM
-
-There's one major decision on our library: **KeyValue and Event's values are stored in the object itself**. So when you get a property with $item->myProp you are accessing it directly. — That won't differ much from an Array memory-wise, because we are storing data as dynamic vars. But by extending a KeyValue class and defining our public properties you can actually reduce the memory allocation.
-
-That provides the basis for an ODM. Our objects (KeyValue, Event and Relationship) map directly to the items in your Orchestrate database, so by extending them, you can define your properties, validation, default values, etc.
-
-For example, let's start with a very simple KeyValue, made to reflect a 'Member' of our project:
-
-```php
-// Member.php
-namespace MyProject\Models;
-
-use andrefelipe\Orchestrate\KeyValue;
-
-class Member extends KeyValue
-{
-    public $name;
-
-    public $role = 'guest';
-    // feel free to set the defaults!
-    
-    public $birth_date;
-    // unset or null vars do not get Put into Orchestrate.
-    // Rest assure that setting the public vars here will not be stored
-    // in your account, if they are null.
-    // To check what is going to be stored there, use the toArray() method
-}
-```
-
-Getter/setters are fine too! You could use it you favor to add validation, error protection, custom defaults, etc.
-
-```php
-// Member.php
-namespace MyProject\Models;
-
-use andrefelipe\Orchestrate\KeyValue;
-
-class Member extends KeyValue
-{
-    protected $country_code;
-
-    protected $created_date;
-    // protected and private vars get out of the public scope
-    // and therefore do not compose the Value data
-
-    public function __construct()
-    {
-        $this->mapProperty('created_date');
-        $this->mapProperty('country_code');
-
-        // mapProperty will automatically try to match the methods named
-        // after your property with camelCase, for example 'getName'.
-
-        // you can also strictly name the get/setters to map to:
-        // $this->mapProperty('birth_date', 'getBirth', 'setBirth');
-    }
-
-    public function getCreatedDate()
-    {
-        // custom default example:
-        if (!isset($this->created_date)) {
-            $this->created_date = date(DATE_W3C);
-        }
-        return $this->created_date;
-    }
-
-    public function setCreatedDate($value)
-    {
-        $this->created_date = $value;
-    }
-    
-    public function getCountryCode()
-    {
-        // custom default example:
-        if (!isset($this->country_code)) {
-            $this->country_code = 'us';
-        }
-        return $this->country_code;
-    }
-
-    public function setCountryCode($value)
-    {
-        $this->country_code = $value;
-        // here you could add a check if the country code is valid
-        // could match to a country name and store it too, etc
-    }
-}
-```
-
-Two distinct things happen when using custom getter/setters:
-
-1- Access of the defined property gets mapped to the respective method. For example $item->country_code actually calls getCountryCode and $item->country_code = 'us' actually calls setCountryCode.
-
-2- You strictly notify which additional properties the object should handle, so it knows what to include in the Value that will be sent to Orchestrate.
-
-> Remember, the Value data is composed of all your public properties plus the custom one defined with mapProperty. To check what will be sent to Orchestrate use the toArray method.
-
-The example above is a class that will represent each item in a Collection.
-
-In that case you will also want to create a class to act as your Collection:
-
-```php
-// Members.php
-namespace MyProject\Models;
-
-use andrefelipe\Orchestrate\Collection;
-use GuzzleHttp\ClientInterface;
-
-class Members extends Collection
-{
-    public function __construct(ClientInterface $httpClient)
-    {
-        // set http client
-        $this->setHttpClient($httpClient);
-
-        // set collection name
-        $this->setCollection('members');
-
-        // set child classes
-        $this->setItemClass('MyProject\Models\Member');
-
-        // could set the Event class too if desired
-        // $this->setEventClass('MyProject\Models\MemberActivity');
-    }
-}
-
-// at this approach, whenever we create items from this collection,
-// it will be Member objects
-
-// for example, let's instantiate a Http client programatically
-use MyProject\Models\Members;
-use andrefelipe\Orchestrate;
-use GuzzleHttp\Client as GuzzleClient;
-
-// creates a pre-configured Guzzle Client with the default settings
-$httpClient = Orchestrate\default_http_client();
-
-// instatiate the collection
-$members = new Members($httpClient);
-
-// and the member
-$item = $members->item('john'); // instance of Member class
-
-```
-
-If you are using the Client class, you can change which classes to use with: 
-```php
-
-$client->setItemClass($class);
-$client->setEventClass($class);
-
-// where $class is a fully qualified name of a class that implements, at minimum:
-// andrefelipe\Orchestrate\Contracts\KeyValueInterface for KeyValue
-// andrefelipe\Orchestrate\Contracts\EventInterface for Event
-```
-
-For a pratical example, please view [this project](https://github.com/andrefelipe/orchestrate-phalcon).
 
 
 
