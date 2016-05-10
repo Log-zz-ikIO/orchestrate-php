@@ -74,38 +74,33 @@ class Relationship extends AbstractItem implements RelationshipInterface
         return $this;
     }
 
-    /**
-     * @return array
-     */
-    public function toArray()
+    public function getPath() 
     {
-        $data = parent::toArray();
+        $path = parent::getPath();
 
-        $data['path']['relation'] = $this->_relation;
+        $path['relation'] = $this->_relation;
+        $path['source'] = null;
+        $path['destination'] = null;
 
         $source = $this->getSource();
         if ($source) {
-            $data['path']['source'] = [
-                'kind' => 'item',
+            $path['source'] = [
+                'kind' => $source->getKind(),
                 'collection' => $source->getCollection(),
                 'key' => $source->getKey(),
             ];
-        } else {
-            $data['path']['source'] = null;
         }
 
         $destination = $this->getDestination();
         if ($destination) {
-            $data['path']['destination'] = [
-                'kind' => 'item',
+            $path['destination'] = [
+                'kind' => $destination->getKind(),
                 'collection' => $destination->getCollection(),
                 'key' => $destination->getKey(),
             ];
-        } else {
-            $data['path']['destination'] = null;
         }
 
-        return $data;
+        return $path;
     }
 
     public function get()
