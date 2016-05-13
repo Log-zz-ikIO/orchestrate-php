@@ -188,7 +188,7 @@ class TimeRangeBuilder implements ToArrayInterface
      * Helper to convert PHP date to miliseconds since epoch.
      * Of course, without the milisecond precision.
      */
-    private function toEventTime($value)
+    protected function toEventTime($value)
     {
         if ($value instanceof \DateTime) {
             $seconds = $value->getTimestamp();

@@ -66,7 +66,7 @@ trait OrdinalTrait
      *
      * @return self
      */
-    private function setOrdinalStr($value)
+    protected function setOrdinalStr($value)
     {
         $this->settlePromise();
 

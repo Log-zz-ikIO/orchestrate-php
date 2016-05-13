@@ -28,7 +28,7 @@ trait ScoreTrait
      *
      * @return self
      */
-    private function setScore($value)
+    protected function setScore($value)
     {
         $this->settlePromise();
 

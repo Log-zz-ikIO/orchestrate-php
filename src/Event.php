@@ -73,7 +73,7 @@ class Event extends AbstractItem implements EventInterface
         return $this;
     }
 
-    public function getPath() 
+    public function getPath()
     {
         $path = parent::getPath();
 
@@ -142,14 +142,14 @@ class Event extends AbstractItem implements EventInterface
         return $this->_putAsync($value, $ref);
     }
 
-    private function _put(array $value = null, $ref = null)
+    protected function _put(array $value = null, $ref = null)
     {
         $this->_putAsync($value, $ref);
         $this->settlePromise();
         return $this->isSuccess();
     }
 
-    private function _putAsync(array $value = null, $ref = null)
+    protected function _putAsync(array $value = null, $ref = null)
     {
         return $this->requestAsync(
             // method
@@ -265,14 +265,14 @@ class Event extends AbstractItem implements EventInterface
         return $this->_deleteAsync($ref);
     }
 
-    private function _delete($ref = null)
+    protected function _delete($ref = null)
     {
         $this->_deleteAsync($ref);
         $this->settlePromise();
         return $this->isSuccess();
     }
 
-    private function _deleteAsync($ref = null)
+    protected function _deleteAsync($ref = null)
     {
         return $this->requestAsync(
             // method
@@ -315,7 +315,7 @@ class Event extends AbstractItem implements EventInterface
         );
     }
 
-    private function setTimestampAndOrdinalFromLocation()
+    protected function setTimestampAndOrdinalFromLocation()
     {
         // Location: /v0/collection/key/events/type/1398286518286/6
 

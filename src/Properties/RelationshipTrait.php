@@ -88,7 +88,7 @@ trait RelationshipTrait
      *
      * @return array
      */
-    private function formRelationPath($plural = false, $reverse = false)
+    protected function formRelationPath($plural = false, $reverse = false)
     {
         $source = $this->getSource(true);
         $destination = $this->getDestination(true);

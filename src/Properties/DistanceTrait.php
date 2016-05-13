@@ -28,7 +28,7 @@ trait DistanceTrait
      *
      * @return self
      */
-    private function setDistance($value)
+    protected function setDistance($value)
     {
         $this->settlePromise();
         

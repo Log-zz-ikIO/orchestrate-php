@@ -160,14 +160,14 @@ class Relationship extends AbstractItem implements RelationshipInterface
         return $this->_putAsync($value, false);
     }
 
-    private function _put(array $value = null, $ref = null)
+    protected function _put(array $value = null, $ref = null)
     {
         $this->_putAsync($value, $ref);
         $this->settlePromise();
         return $this->isSuccess();
     }
 
-    private function _putAsync(array $value = null, $ref = null)
+    protected function _putAsync(array $value = null, $ref = null)
     {
         return $this->requestAsync(
             // method

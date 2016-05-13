@@ -152,14 +152,14 @@ class KeyValue extends AbstractItem implements KeyValueInterface
         return $this->_putAsync($value, false);
     }
 
-    private function _put(array $value = null, $ref = null)
+    protected function _put(array $value = null, $ref = null)
     {
         $this->_putAsync($value, $ref);
         $this->settlePromise();
         return $this->isSuccess();
     }
 
-    private function _putAsync(array $value = null, $ref = null)
+    protected function _putAsync(array $value = null, $ref = null)
     {
         // clear search properties and tombstone
         $this->_score = null;
@@ -268,14 +268,14 @@ class KeyValue extends AbstractItem implements KeyValueInterface
         return $this->_patchAsync($operations, $ref, $reload);
     }
 
-    private function _patch(PatchBuilder $operations, $ref = null, $reload = false)
+    protected function _patch(PatchBuilder $operations, $ref = null, $reload = false)
     {
         $this->_patchAsync($operations, $ref, $reload);
         $this->settlePromise();
         return $this->isSuccess();
     }
 
-    private function _patchAsync(PatchBuilder $operations, $ref = null, $reload = false)
+    protected function _patchAsync(PatchBuilder $operations, $ref = null, $reload = false)
     {
         // clear some properties beforehand
         $this->_score = null;
@@ -341,14 +341,14 @@ class KeyValue extends AbstractItem implements KeyValueInterface
         return $this->_patchMergeAsync($value, $ref, $reload);
     }
 
-    private function _patchMerge(array $value, $ref = null, $reload = false)
+    protected function _patchMerge(array $value, $ref = null, $reload = false)
     {
         $this->_patchMergeAsync($value, $ref, $reload);
         $this->settlePromise();
         return $this->isSuccess();
     }
 
-    private function _patchMergeAsync(array $value, $ref = null, $reload = false)
+    protected function _patchMergeAsync(array $value, $ref = null, $reload = false)
     {
         // clear some properties beforehand
         $this->_score = null;
@@ -413,14 +413,14 @@ class KeyValue extends AbstractItem implements KeyValueInterface
         return $this->_deleteAsync($ref);
     }
 
-    private function _delete($ref = null)
+    protected function _delete($ref = null)
     {
         $this->_deleteAsync($ref);
         $this->settlePromise();
         return $this->isSuccess();
     }
 
-    private function _deleteAsync($ref = null)
+    protected function _deleteAsync($ref = null)
     {
         // clear all properties beforehand, except the key and ref
         $this->_score = null;
@@ -530,7 +530,7 @@ class KeyValue extends AbstractItem implements KeyValueInterface
      *
      * Should be used when the request was succesful.
      */
-    private function setKeyRefFromLocation()
+    protected function setKeyRefFromLocation()
     {
         $location = $this->getResponse()->getHeader('Location');
         if (empty($location)) {

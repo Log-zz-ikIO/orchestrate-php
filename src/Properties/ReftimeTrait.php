@@ -28,7 +28,7 @@ trait ReftimeTrait
      *
      * @return self
      */
-    private function setReftime($value)
+    protected function setReftime($value)
     {
         $this->settlePromise();
 

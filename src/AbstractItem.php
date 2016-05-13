@@ -316,7 +316,7 @@ abstract class AbstractItem extends AbstractConnection implements ItemInterface
      *
      * @return array
      */
-    private function getMappedValues($skipNull = false)
+    protected function getMappedValues($skipNull = false)
     {
         $result = [];
         foreach ($this->_propertyMap as $key => $methods) {
